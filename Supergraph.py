@@ -167,13 +167,65 @@ class Connection:
         if (varname in self.connectiondata):
             del self.connectiondata[varname];
 
+class Evaluator:
+    @staticmethod
+    def checkParenCount(expression):
+        if(expression.count('(') == expression.count(')')):
+            return True;
+        return False;
 
+    @staticmethod
+    def checkParenStacks(expression):
+        #runs through the expression and checks if parentheses are paired up properly
+        parencount = 0;
+        for char in expression:
+            if (char == '('):
+                parencount += 1;
+            if (char == ')'):
+                parencount -= 1;
+                if (parencount < 0):
+                    return False;
+        return True;
 
+    @staticmethod
+    def checkKeyword(expression):
+        keywords = ['test','4','123'];
+        if expression in keywords:
+            return True;
+        return False;
+
+    #@staticmethod
+    #def evaluateExpression(expression):
+    @staticmethod
+    def tokenizeExpression(expression):
+        #returns a list of tokens in the expression
+        #tokens are parentheses, math operators, commas, function names, and literals
+        tokens = ['-','+','/','*','%','(',')','\'','the']
+        returnlist = [];        #return list, containing the tokens
+        current_token = '';
+
+        #iterate through expression by characters, checking for specials
+        for char in expression:
+            if char in tokens:
+                if len(current_token) > 0:
+                    returnlist.append(current_token);
+                    current_token = '';
+                returnlist.append(char);
+            else:
+                current_token += char;
+
+        if len(current_token) > 0:
+            returnlist.append(current_token);
+
+        return returnlist;
 
 ###DRIVER CODE###
 
 file = open('graphdata.txt','r');
-print (file.readlines());
+x = file.readlines();
+for i in x:
+    print Evaluator.tokenizeExpression(i.rstrip());
+#print (file.readlines());
 
 
 S = Supergraph();
@@ -187,3 +239,14 @@ S.listNodes();
 S.removeNodes(['foo','testnode2','testnode1']);
 #S.removeNodes('testnode1');
 S.listNodes();
+
+#print Evaluator.checkParenCount('())')
+#print Evaluator.checkParenStacks('((())')
+
+something = 'the';
+print len(something);
+
+#print Evaluator.tokenizeExpression('((+awdtheawdaw\'d\')')
+
+#Evaluator.checkKeyword('test');
+#Evaluator.checkKeyword('nope');
