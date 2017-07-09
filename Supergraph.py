@@ -195,29 +195,66 @@ class Evaluator:
         return False;
 
     #@staticmethod
-    #def evaluateExpression(expression):
     @staticmethod
     def tokenizeExpression(expression):
         #returns a list of tokens in the expression
         #tokens are parentheses, math operators, commas, function names, and literals
-        tokens = ['-','+','/','*','%','(',')','\'','the']
+        tokens = ['-','+','/','*','%','(',')'];
+        literalchar = '"';      #
         returnlist = [];        #return list, containing the tokens
         current_token = '';
+        isQuoted = 0;
 
-        #iterate through expression by characters, checking for specials
         for char in expression:
-            if char in tokens:
-                if len(current_token) > 0:
-                    returnlist.append(current_token);
-                    current_token = '';
-                returnlist.append(char);
+            # if the chars are currently being parsed as literals
+            if isQuoted == 1:
+                if char == literalchar:     #check if the literal ends
+                    if len(current_token) > 0:                      #check if token is not empty
+                        returnlist.append(current_token);           #add it then
+                    current_token = "";             #reset token
+                    returnlist.append(literalchar)  #add closing marker to signify end of literal in tokens list
+                    isQuoted = 0;                   #no longer interpretting text as a literal
+                    #print 'UNQUOTED';
+                # literal does not end
+                else:
+                    current_token += char;  #add current char to current literal string
+            # chars are not being parsed as literals
             else:
-                current_token += char;
+                if char == literalchar: #check opening to literal
+                    cleantoken = current_token.replace(' ', '');  # strip whitespace from current token
+                    if len(cleantoken) > 0:  # check if whitespace removed token is not empty
+                        returnlist.append(cleantoken);  # add it then
+                    current_token = "";
+                    returnlist.append(literalchar);
+                    isQuoted = 1;
+                    #print 'QUOTED';
+                else:
+                    if char in tokens:
+                        cleantoken = current_token.replace(' ', '');  # strip whitespace from current token
+                        if len(cleantoken) > 0:  # check if whitespace removed token is not empty
+                            returnlist.append(cleantoken);  # add it then
+                            current_token = '';
+                        returnlist.append(char);
+                    else:
+                        current_token += char;
+
+        #check if open quote
+        if  isQuoted == 1:
+            print 'open quote!';
 
         if len(current_token) > 0:
             returnlist.append(current_token);
 
         return returnlist;
+
+    #@staticmethod
+    #def mergeQuotedTokens(tokenlist):
+        #merges tokens that are surrounded by quotes
+        returnlist = [];
+
+     #   for token in tokenlist:
+
+
 
 ###DRIVER CODE###
 

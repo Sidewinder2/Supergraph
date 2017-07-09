@@ -4,4 +4,5 @@
 4
 5
 1 + 6
-((+awdtheawdaw'd')
+((+awdthe  awdaw " dddd " " )
+   SUM     (" hello" , " world")
