@@ -5,4 +5,4 @@
 5
 1 + 6
 ((+awdthe  awdaw " dddd " " )
-   SUM     (" hello" , " world")
+	SUM	(" hello" , " world")

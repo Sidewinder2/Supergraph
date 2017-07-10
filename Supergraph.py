@@ -168,6 +168,16 @@ class Connection:
             del self.connectiondata[varname];
 
 class Evaluator:
+    functionNames = ['SUM','LOGBASE','LENGTH','ABS','SQRT',
+                     'NOT','ISNUMERIC','HAMMING','LEVEN','MIN',
+                     'MAX','SMALLEST','LARGEST','CHOOSE',
+                     'AVG','STRREPLACE'];
+
+    @staticmethod
+    def isInt_str(v):
+        v = str(v).strip()
+        return v == '0' or (v if v.find('..') > -1 else v.lstrip('-+').rstrip('0').rstrip('.')).isdigit();
+
     @staticmethod
     def checkParenCount(expression):
         if(expression.count('(') == expression.count(')')):
@@ -188,18 +198,72 @@ class Evaluator:
         return True;
 
     @staticmethod
-    def checkKeyword(expression):
-        keywords = ['test','4','123'];
-        if expression in keywords:
-            return True;
+    def loadKeywords():
+        file = open('keywords.txt', 'r');
+        keywords = file.readlines();
+        for i in keywords:
+            Evaluator.functionNames.append(i.rstrip());
         return False;
+
+    @staticmethod
+    def evaluateExpression(expression):
+        paramList = [];
+        paramHeights = [];
+        paramType = [];
+        current_height = 0;
+        operators = ['-','+','/','*','%','.'];
+
+        tokenlist = Evaluator.tokenizeExpression(expression);
+
+
+        print tokenlist;
+        for token in tokenlist:
+            if token == '(':
+                current_height += 1;
+                #print ' height ' + str(current_height);
+            elif token == ')':
+                current_height -= 1;
+                #print ' height '+str(current_height);
+            elif token in Evaluator.functionNames:
+                #print ' dis be a function: ' + token;
+                paramList.append(token);
+                paramHeights.append(current_height);
+                paramType.append('Fun');  #is a function
+            elif token in operators:
+                #print ' dis be an operator: ' + token;
+                paramList.append(token);
+                paramHeights.append(current_height);
+                paramType.append('Op');  # is a literal
+            elif (len(token) >= 2) and ((token[0] == '"') and (token[len(token)-1] == '"')):    #check if it's surrounded by quotes
+                #print ' dis be a string: ' + token;
+                paramList.append(token);
+                paramHeights.append(current_height);
+                paramType.append('Str');  # is a literal
+            elif Evaluator.isInt_str(token):
+                #print ' dis be a number: ' + token;
+                paramList.append(token);
+                paramHeights.append(current_height);
+                paramType.append('Lit');  # is a literal
+            elif token == '\t':
+                placeholderforinterpreter = 0;
+                #print ' this is a tab';
+            elif token == ',':
+                #print ' this is a comma';
+                placeholderforinterpreter = 0;
+            else:
+                #print 'this is something else';
+                paramList.append(token);
+                paramHeights.append(current_height);
+                paramType.append('?');  # is a literal
 
     #@staticmethod
     @staticmethod
     def tokenizeExpression(expression):
         #returns a list of tokens in the expression
         #tokens are parentheses, math operators, commas, function names, and literals
-        tokens = ['-','+','/','*','%','(',')'];
+        print 'Expression: ' + expression;
+
+        specialchars = ['\t','-','+','/','*','%','(',')','.'];
         literalchar = '"';      #
         returnlist = [];        #return list, containing the tokens
         current_token = '';
@@ -209,10 +273,10 @@ class Evaluator:
             # if the chars are currently being parsed as literals
             if isQuoted == 1:
                 if char == literalchar:     #check if the literal ends
-                    if len(current_token) > 0:                      #check if token is not empty
-                        returnlist.append(current_token);           #add it then
+
+                    returnlist.append(literalchar+current_token+literalchar);
                     current_token = "";             #reset token
-                    returnlist.append(literalchar)  #add closing marker to signify end of literal in tokens list
+                    #returnlist.append(literalchar)  #add closing marker to signify end of literal in tokens list
                     isQuoted = 0;                   #no longer interpretting text as a literal
                     #print 'UNQUOTED';
                 # literal does not end
@@ -225,11 +289,11 @@ class Evaluator:
                     if len(cleantoken) > 0:  # check if whitespace removed token is not empty
                         returnlist.append(cleantoken);  # add it then
                     current_token = "";
-                    returnlist.append(literalchar);
+                    #returnlist.append(literalchar);
                     isQuoted = 1;
                     #print 'QUOTED';
                 else:
-                    if char in tokens:
+                    if char in specialchars:
                         cleantoken = current_token.replace(' ', '');  # strip whitespace from current token
                         if len(cleantoken) > 0:  # check if whitespace removed token is not empty
                             returnlist.append(cleantoken);  # add it then
@@ -239,7 +303,7 @@ class Evaluator:
                         current_token += char;
 
         #check if open quote
-        if  isQuoted == 1:
+        if isQuoted == 1:
             print 'open quote!';
 
         if len(current_token) > 0:
@@ -247,21 +311,14 @@ class Evaluator:
 
         return returnlist;
 
-    #@staticmethod
-    #def mergeQuotedTokens(tokenlist):
-        #merges tokens that are surrounded by quotes
-        returnlist = [];
-
-     #   for token in tokenlist:
-
-
 
 ###DRIVER CODE###
 
 file = open('graphdata.txt','r');
 x = file.readlines();
 for i in x:
-    print Evaluator.tokenizeExpression(i.rstrip());
+    #print Evaluator.tokenizeExpression(i.rstrip());
+    Evaluator.evaluateExpression(i.rstrip());
 #print (file.readlines());
 
 
@@ -271,19 +328,26 @@ S.addNode('testnode1');
 S.addNode('testnode1');
 S.addNode('testnode2');
 S.addNode('testnode3');
-S.listGraphs();
-S.listNodes();
-S.removeNodes(['foo','testnode2','testnode1']);
+#S.listGraphs();
+#S.listNodes();
+#S.removeNodes(['foo','testnode2','testnode1']);
 #S.removeNodes('testnode1');
-S.listNodes();
+#S.listNodes();
 
 #print Evaluator.checkParenCount('())')
 #print Evaluator.checkParenStacks('((())')
 
-something = 'the';
-print len(something);
-
 #print Evaluator.tokenizeExpression('((+awdtheawdaw\'d\')')
 
+#print Evaluator.checkKeyword('LENGTH')
+
+#print Evaluator.isInt_str('1')
+#print Evaluator.isInt_str('+1')
+#print Evaluator.isInt_str('-1.123')
+#print Evaluator.isInt_str('12a')
+#print Evaluator.isInt_str('1.a')
 #Evaluator.checkKeyword('test');
 #Evaluator.checkKeyword('nope');
+
+#testlist = [1,2,3,4,5,6,7,8];
+#print testlist[4:7]
