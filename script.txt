@@ -2,3 +2,6 @@ PRINT(1 + 4 + "hello" + (("world")))
 2+PRINT(5);
 "4" + SUM(123,456,45)
 4,4,+,5,+
+ADDNODES("NODE1","NODE2","NODE3")
+LISTNODES()
+PRINT(GETNODES())
