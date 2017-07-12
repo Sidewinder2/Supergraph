@@ -39,6 +39,14 @@ class Supergraph:
         for i in verifiednodes:
             del self.nodelist[i];
 
+    def getNodeList(self):
+        #lists the node keys
+        return self.nodelist.keys();
+
+    def printNodeList(self):
+        #lists the node keys
+        print self.nodelist.keys();
+
     def addNodeData(self, nodenames, varname, vardata):
         # Adds data to a list of nodes
         nodes = self.namesToNodes(nodenames);  # get list of nodes from keys
@@ -50,10 +58,6 @@ class Supergraph:
         nodes = self.namesToNodes(nodenames);  # get list of nodes from keys
         for i in nodes:
             Node.removeNodeData(nodes[i], varname);
-
-    def listNodes(self):
-        #lists the node keys
-        print self.nodelist.keys();
 
     def verifyNodeNames(self, nodenames = []):
         #Will remove any names from list that don't point to anything
@@ -168,10 +172,12 @@ class Connection:
             del self.connectiondata[varname];
 
 class Evaluator:
+    S = Supergraph();
     functionNames = ['SUM','LOGBASE','LENGTH','ABS','SQRT',
                      'NOT','ISNUMERIC','HAMMING','LEVEN','MIN',
                      'MAX','SMALLEST','LARGEST','CHOOSE',
-                     'AVG','STRREPLACE','PRINT'];
+                     'AVG','STRREPLACE','PRINT','LISTNODES','ADDNODES',
+                     'GETNODES'];
 
     @staticmethod
     def isInt_str(v):
@@ -256,8 +262,26 @@ class Evaluator:
                 result += int(param);
             return ["Num", result];
 
-        if "E" in types:
-            return ["E", "Failure"];
+        if (function in ["ADDNODES"]):
+            for type in paramtypes:
+                if type not in ["Str"]:
+                    return ["E", "Input of type "+type+" cannot be added to supergraph"];
+            for param in parameters:
+                Supergraph.addNode(Evaluator.S,param);
+            return ["V", ""];
+
+        if (function in ["LISTNODES"]):
+            if len(parameters) > 0:
+                return ["E", "Unexpected parameters given"];
+            Supergraph.printNodeList(Evaluator.S);
+            return ["V", ""];
+
+        if (function in ["GETNODES"]):
+            if len(parameters) > 0:
+                return ["E", "Unexpected parameters given"];
+            return ["Str", Supergraph.getNodeList(Evaluator.S)];
+
+        return ["E", "General Failure"];
 
 
     @staticmethod
@@ -421,7 +445,6 @@ class Evaluator:
 
         return returnlist;
 
-
 ###DRIVER CODE###
 
 file = open('script.txt','r');
@@ -430,18 +453,3 @@ for i in x:
 #     #print Evaluator.tokenizeExpression(i.rstrip());
      Evaluator.evaluateExpression(i.rstrip());
 #print (file.readlines());
-
-S = Supergraph();
-S.addGraph('testgraph');
-S.addNode('testnode1');
-S.addNode('testnode1');
-S.addNode('testnode2');
-S.addNode('testnode3');
-#S.listGraphs();
-#S.listNodes();
-#S.removeNodes(['foo','testnode2','testnode1']);
-#S.removeNodes('testnode1');
-#S.listNodes();
-
-#print Evaluator.checkParenCount('())')
-#print Evaluator.checkParenStacks('((())')
