@@ -171,7 +171,7 @@ class Evaluator:
     functionNames = ['SUM','LOGBASE','LENGTH','ABS','SQRT',
                      'NOT','ISNUMERIC','HAMMING','LEVEN','MIN',
                      'MAX','SMALLEST','LARGEST','CHOOSE',
-                     'AVG','STRREPLACE'];
+                     'AVG','STRREPLACE','PRINT'];
 
     @staticmethod
     def isInt_str(v):
@@ -206,55 +206,165 @@ class Evaluator:
         return False;
 
     @staticmethod
+    def categorizeToken(token):
+        operators = ['-', '+', '/', '*', '%', '.'];
+
+        if token == '(':
+           return '(';
+        elif token == ')':
+            return ')';
+        elif token in Evaluator.functionNames:
+            return 'Fun';
+        elif token in operators:
+            return 'Op';
+        elif (len(token) >= 2) and ((token[0] == '"') and (token[len(token) - 1] == '"')):  # check if it's surrounded by quotes
+            return 'Str';
+        elif Evaluator.isInt_str(token):
+            return 'Num';
+        elif token == '\t':
+            return 'Tab';
+        elif token == ',':
+            return 'Comma';
+        else:
+            return '?';     #unknown; likely variable
+
+    @staticmethod
+    def evaluateFunction(function,parameters,paramtypes):
+        #returns a list of [returntype,returnvalue] after applying the designated function
+        #Returns ["E","errormessage] in the event of failure
+
+        if "E" in paramtypes:
+            return ["E","General Failure"];
+        if "V" in paramtypes:
+            return ["E","Cannot manipulate Void type"];
+        if(function == "PRINT"):
+            print parameters;
+            return ["V", ""];
+        if (function in ["+","SUM"]):
+            allDigits = True;
+            result = 0;
+            for type in paramtypes:
+                if type not in ["Str","Num"]:
+                    return ["E", "Input of type "+type+" cannot be summed"];
+                if type != "Num":
+                    result = "";
+                    for param in parameters:
+                        result += str(param);
+                    return ["Str",result];
+            result = 0;
+            for param in parameters:
+                result += int(param);
+            return ["Num", result];
+
+        if "E" in types:
+            return ["E", "Failure"];
+
+
+    @staticmethod
     def evaluateExpression(expression):
-        paramList = [];
-        paramHeights = [];
-        paramType = [];
-        current_height = 0;
-        operators = ['-','+','/','*','%','.'];
+        #parameter stacks
+        paramStack = [[]];  #holds parameter lists
+        paramHeights = [0]; #Maintains the parenthesis depth of each list in paramStack
+        paramType = [[]];   #details what type of variable is held. Corresponds to each value in paramStack
+        #operation/function stacks
+        opStack = [];       #Actual operation/function name
+        opHeight = [];      #Parenthesis depth of function/operator
+        opType = [];        #Determines whether an operator or a function
+        #height
+        current_height = 0; #Used for keeping track of the current parenthesis depth
 
+        #tokenize the input expression
         tokenlist = Evaluator.tokenizeExpression(expression);
+        #print tokenlist;
 
-
-        print tokenlist;
+        #run through each token and evaluate expression
         for token in tokenlist:
-            if token == '(':
+            #get the category of the current token to determine what to do
+            category = Evaluator.categorizeToken(token);
+            #print category;
+
+            if category == '(':
+                #increase the height
                 current_height += 1;
-                #print ' height ' + str(current_height);
-            elif token == ')':
+                #make a new parameter list at new height
+                paramStack.append([]);
+                paramHeights.append(current_height);
+                paramType.append([]);
+            elif category == ')':
+                #set height to one less, and update height of topmost parameters
                 current_height -= 1;
-                #print ' height '+str(current_height);
-            elif token in Evaluator.functionNames:
-                #print ' dis be a function: ' + token;
-                paramList.append(token);
-                paramHeights.append(current_height);
-                paramType.append('Fun');  #is a function
-            elif token in operators:
-                #print ' dis be an operator: ' + token;
-                paramList.append(token);
-                paramHeights.append(current_height);
-                paramType.append('Op');  # is a literal
-            elif (len(token) >= 2) and ((token[0] == '"') and (token[len(token)-1] == '"')):    #check if it's surrounded by quotes
-                #print ' dis be a string: ' + token;
-                paramList.append(token);
-                paramHeights.append(current_height);
-                paramType.append('Str');  # is a literal
-            elif Evaluator.isInt_str(token):
-                #print ' dis be a number: ' + token;
-                paramList.append(token);
-                paramHeights.append(current_height);
-                paramType.append('Lit');  # is a literal
-            elif token == '\t':
-                placeholderforinterpreter = 0;
-                #print ' this is a tab';
-            elif token == ',':
-                #print ' this is a comma';
-                placeholderforinterpreter = 0;
-            else:
-                #print 'this is something else';
-                paramList.append(token);
-                paramHeights.append(current_height);
-                paramType.append('?');  # is a literal
+                paramHeights[-1] = current_height;
+
+                # check for possible function call
+                if (len(opStack) > 0) and opType[-1] == 'Fun':
+                    #check if function and current parameter heights match up
+                    if opHeight[-1] == paramHeights[-1]:
+                        #Evaluate result of function call
+                        result = Evaluator.evaluateFunction(opStack[-1],paramStack[-1],paramType[-1]);
+                        #report any errors
+                        if (result[0] == "E"):
+                            print result;
+                            return;
+
+                        #Add results to stacks
+                        paramStack[-1] = [result[1]];
+                        paramType[-1] = [result[0]];
+                        # (paramType[-1])[-1] = result[0];
+
+                        #pop function from stack
+                        opType.pop()
+                        opHeight.pop()
+                        opStack.pop()
+
+                #merge the paramaters list within the parenthesis with ones "below" them
+                #EX: 3,(4,5) <-> [[3],[4,5]] becomes  3,4,5 <-> [[3,4,5]]
+                paramStack[-2] = paramStack[-2] + paramStack[-1];
+                paramStack.pop()
+                paramHeights.pop()
+                paramType[-2] = paramType[-2] + paramType[-1];
+                paramType.pop()
+
+            elif category == "Fun" or category == "Op":
+                #Add operation/function to operation stack
+                opStack.append(token);
+                opType.append(category);
+                opHeight.append(current_height);
+
+            elif category == "Str":
+                #Add new parameter to the list at the top of the stack
+                paramStack[-1].append(token[1:-1]); #remove the " from start and end of string
+                paramType[-1].append(category);
+            elif category == "Num":
+                paramStack[-1].append(token);
+                paramType[-1].append(category);
+
+            #At end, check if a binary operation is possible
+            if (len(opStack) > 0):
+                if opType[-1] == 'Op':
+                    #check if 2 or more parameters in topmost list
+                    if len(paramStack[-1]) > 1:
+                        #check if height of top list and top operator match
+                        if opHeight[-1] == paramHeights[-1]:
+                            #get left and right values
+                            p2 = paramStack[-1].pop()
+                            pt2 = paramType[-1].pop()
+                            p1 = paramStack[-1].pop()
+                            pt1 = paramType[-1].pop()
+                            #Evaluate the binary operator
+                            result = Evaluator.evaluateFunction("+",[p1,p2],[pt1,pt2]);
+                            #Report error
+                            if(result[0] == "E"):
+                                print result;
+                                return;
+                            #put results in stacks
+                            paramStack[-1].append(result[1]);
+                            paramType[-1].append(result[0]);
+                            #remove operator from top of stack
+                            opType.pop()
+                            opHeight.pop()
+                            opStack.pop()
+
+        print 'END OF EVALUATION PARAMETERS: ' +str(paramStack);
 
     #@staticmethod
     @staticmethod
@@ -263,7 +373,7 @@ class Evaluator:
         #tokens are parentheses, math operators, commas, function names, and literals
         print 'Expression: ' + expression;
 
-        specialchars = ['\t','-','+','/','*','%','(',')','.'];
+        specialchars = ['\t','-','+','/','*','%','(',')','.',','];
         literalchar = '"';      #
         returnlist = [];        #return list, containing the tokens
         current_token = '';
@@ -314,13 +424,12 @@ class Evaluator:
 
 ###DRIVER CODE###
 
-file = open('graphdata.txt','r');
+file = open('script.txt','r');
 x = file.readlines();
 for i in x:
-    #print Evaluator.tokenizeExpression(i.rstrip());
-    Evaluator.evaluateExpression(i.rstrip());
+#     #print Evaluator.tokenizeExpression(i.rstrip());
+     Evaluator.evaluateExpression(i.rstrip());
 #print (file.readlines());
-
 
 S = Supergraph();
 S.addGraph('testgraph');
@@ -336,18 +445,3 @@ S.addNode('testnode3');
 
 #print Evaluator.checkParenCount('())')
 #print Evaluator.checkParenStacks('((())')
-
-#print Evaluator.tokenizeExpression('((+awdtheawdaw\'d\')')
-
-#print Evaluator.checkKeyword('LENGTH')
-
-#print Evaluator.isInt_str('1')
-#print Evaluator.isInt_str('+1')
-#print Evaluator.isInt_str('-1.123')
-#print Evaluator.isInt_str('12a')
-#print Evaluator.isInt_str('1.a')
-#Evaluator.checkKeyword('test');
-#Evaluator.checkKeyword('nope');
-
-#testlist = [1,2,3,4,5,6,7,8];
-#print testlist[4:7]
