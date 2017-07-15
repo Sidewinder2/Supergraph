@@ -47,13 +47,26 @@ class Supergraph:
         #lists the node keys
         print self.nodelist.keys();
 
-    def addNodeData(self, nodenames, varname, vardata):
+    def addNodeData(self, nodenames, varname, vardata, vartype):
         # Adds data to a list of nodes
         nodes = self.namesToNodes(nodenames);  # get list of nodes from keys
         for i in nodes:
-            Node.addNodeData(nodes[i], varname, vardata);
+            Node.addNodeData(i, varname, vardata, vartype);
 
-    def removeNodeData(self, nodenames, varname, vardata):
+    def getNodeData(self, nodenames, varname):
+        # Adds data to a list of nodes
+        nodes = self.namesToNodes(nodenames);  # get list of nodes from keys
+        returnlist = [[],[]];
+        for i in nodes:
+            typevalue = Node.getNodeData(i, varname);   #get the array containing the type and value of the data
+            if typevalue is not None:
+                type = typevalue[0];
+                value = typevalue[1];
+                returnlist[0].append(type);
+                returnlist[1].append(value);
+        return returnlist;
+
+    def removeNodeData(self, nodenames, varname):
         # Removes data from a list of nodes
         nodes = self.namesToNodes(nodenames);  # get list of nodes from keys
         for i in nodes:
@@ -63,7 +76,7 @@ class Supergraph:
         #Will remove any names from list that don't point to anything
         returnlist = [];
         for i in nodenames:
-            if i in self.nodelist:
+            if i in self.nodelist.keys():
                 returnlist.append(i); #get pointer from node list
         return returnlist;
 
@@ -71,10 +84,10 @@ class Supergraph:
         #Converts a list of a keys to node pointers
         # Will remove any names from list that don't point to anything
         returnlist = [];
-        names = Supergraph.verifyNodeNames(nodenames);
+        names = Supergraph.verifyNodeNames(self,nodenames);
         for i in names:
-            if names[i] in self.nodelist:
-                returnlist.append(self.nodelist[nodenames[i]]); #get pointer from node list
+            if i in self.nodelist.keys():
+                returnlist.append(self.nodelist[i]); #get pointer from node list
         return returnlist;
 
     def addConnection(self, connectionname, leftname, rightname):
@@ -123,23 +136,29 @@ class Node:
         self.supergraph = supergraph;
         self.name = name;
         self.nodedata = {};
+        self.nodedatatype = {};
 
     def getNodeName(self):
         return self.name;
 
-    def addNodeData(self, varname, vardata):
-        if (varname not in self.nodedata):
+    def addNodeData(self, varname, vardata, vartype):
+        if (varname not in self.nodedata) and varname != "name":
             self.nodedata[varname] = vardata;
+            self.nodedatatype[varname] = vartype;
 
     def getNodeData(self, varname):
-        #gets value of requested variable, none if it doesn't exist
+        #gets type and value of requested variable, none if it doesn't exist
         if (varname in self.nodedata):
-            return self.nodedata[varname];
+            #print "RETURNING " + self.name + ": "+str([self.nodedatatype[varname],self.nodedata[varname]])
+            return [self.nodedatatype[varname],self.nodedata[varname]];
+        if varname == "name":
+            return ["Str",self.name];
         return None;
 
     def removeNodeData(self, varname):
         if (varname in self.nodedata):
             del self.nodedata[varname];
+            del self.nodedatatype[varname];
 
 class Connection:
     def __init__(self,supergraph,name,leftkey,rightkey):
@@ -177,7 +196,7 @@ class Evaluator:
                      'NOT','ISNUMERIC','HAMMING','LEVEN','MIN',
                      'MAX','SMALLEST','LARGEST','CHOOSE',
                      'AVG','STRREPLACE','PRINT','LISTNODES','ADDNODES',
-                     'GETNODES'];
+                     'GETNODES','REMOVENODES','ADDNODEDATA','GETNODEDATA'];
 
     @staticmethod
     def isInt_str(v):
@@ -213,7 +232,7 @@ class Evaluator:
 
     @staticmethod
     def categorizeToken(token):
-        operators = ['-', '+', '/', '*', '%', '.'];
+        operators = ['-', '+', '/', '%', '.'];
 
         if token == '(':
            return '(';
@@ -231,8 +250,18 @@ class Evaluator:
             return 'Tab';
         elif token == ',':
             return 'Comma';
+        elif token == '*':
+            return '*';
         else:
             return '?';     #unknown; likely variable
+
+    @staticmethod
+    def checkAllTypes(paramtypes=[],validparamtypes=[]):
+        #checks to see if all values in paramtypes match up with valid types
+        for type in paramtypes:
+            if type not in validparamtypes:
+                return False;
+        return True;
 
     @staticmethod
     def evaluateFunction(function,parameters,paramtypes):
@@ -277,11 +306,62 @@ class Evaluator:
             return ["V", ""];
 
         if (function in ["GETNODES"]):
-            if len(parameters) > 0:
+            if len(parameters) > 1:
+                if Evaluator.checkAllTypes(paramtypes,['Str']):
+                    return ["N", Supergraph.verifyNodeNames(Evaluator.S, parameters)];
                 return ["E", "Unexpected parameters given"];
-            return ["Str", Supergraph.getNodeList(Evaluator.S)];
+            elif len(parameters) == 1:
+                if paramtypes[0] == 'Str':
+                    return ["N", Supergraph.verifyNodeNames(Evaluator.S,parameters)];
+                if paramtypes[0] == '*':
+                    return ["N", Supergraph.getNodeList(Evaluator.S)];
+            else:
+                return ["N", Supergraph.getNodeList(Evaluator.S)];
 
-        return ["E", "General Failure"];
+        if (function in ["ADDNODEDATA"]):
+            if len(parameters) == 3:
+                #nodenames, varname, vardata
+                if (paramtypes[0:2] == ['N','Str']) and (paramtypes[2] in ['Str','Num']):
+                    Supergraph.printNodeList(Evaluator.S)
+                    #print Supergraph.verifyNodeNames(Evaluator.S,parameters[0])
+                    Supergraph.addNodeData(Evaluator.S,parameters[0],parameters[1],parameters[2],paramtypes[2])
+                    return ["V", ""];
+                else:
+                    return ["E", "Unexpected parameters given"];
+            else:
+                return ["E", "Unexpected parameters given"];
+
+        if (function in ["GETNODEDATA"]):
+            if len(parameters) == 2:
+                #nodenames, varname, vardata
+                if (paramtypes[0:2] == ['N','Str']):
+                    returnlist = Evaluator.S.getNodeData(parameters[0],parameters[1]);
+                    return ["L", returnlist];
+                else:
+                    return ["E", "Unexpected parameters given"];
+            else:
+                return ["E", "Unexpected parameters given"];
+
+        if (function in ["REMOVENODES"]):
+            if len(parameters) > 1:
+                if Evaluator.checkAllTypes(paramtypes,['Str']):
+                    Evaluator.S.removeNodes(Supergraph.verifyNodeNames(Evaluator.S, parameters));
+                    return ["V", ""];
+                return ["E", "Unexpected parameters given"];
+            elif len(parameters) == 1:
+                if paramtypes[0] == 'Str':
+                    Evaluator.S.removeNodes(Supergraph.verifyNodeNames(Evaluator.S,parameters));
+                    return ["V", ""];
+                if paramtypes[0] == 'N':
+                    Evaluator.S.removeNodes(Supergraph.verifyNodeNames(Evaluator.S, parameters));
+                    return ["V", ""];
+                if paramtypes[0] == '*':
+                    Evaluator.S.removeNodes(Supergraph.getNodeList(Evaluator.S))
+                    return ["V", ""];
+            else:
+                return ["E", "Unexpected parameters given"];
+
+        return ["E", "Unknown function "+function];
 
 
     @staticmethod
@@ -353,12 +433,15 @@ class Evaluator:
                 opStack.append(token);
                 opType.append(category);
                 opHeight.append(current_height);
-
             elif category == "Str":
                 #Add new parameter to the list at the top of the stack
                 paramStack[-1].append(token[1:-1]); #remove the " from start and end of string
+                #paramStack[-1].append(token);
                 paramType[-1].append(category);
             elif category == "Num":
+                paramStack[-1].append(int(token));
+                paramType[-1].append(category);
+            elif category == "*":
                 paramStack[-1].append(token);
                 paramType[-1].append(category);
 
@@ -452,4 +535,9 @@ x = file.readlines();
 for i in x:
 #     #print Evaluator.tokenizeExpression(i.rstrip());
      Evaluator.evaluateExpression(i.rstrip());
-#print (file.readlines());
+
+
+#                     __
+#        _______     /*_)-< HISS HISS
+#  ___ /  _____  \__/ /
+# < ____ /     \____ /
