@@ -254,6 +254,7 @@ class Evaluator:
                       'ADDNODEDATA', 'GETNODEDATA', 'REMOVENODEDATA',
                       'LISTCONNECTIONS','ADDCONNECTIONS','GETCONNECTIONS','REMOVECONNECTIONS']
 
+
     @staticmethod
     def is_number(s):
         try:
@@ -726,7 +727,10 @@ class Evaluator:
         # tokens are parentheses,  math operators,  commas,  function names,  and literals
         print 'Expression: ' + expression
 
+        comment_char = "#"  # character indicating start of comment and to stop tokenizing
+
         specialchars = ['\t', '-', '+', '/', '*', '%', '(', ')', ',']
+        specialchars.append(comment_char)   #add comment character to list of special chars
         returnlist = []        # return list,  containing the tokens
         current_token = ''
 
@@ -755,17 +759,22 @@ class Evaluator:
                     if len(cleantoken) > 0:  # check if whitespace removed token is not empty
                         returnlist.append(cleantoken)  # add it then
 
-                    current_token = ""
+                    current_token = ""      # Reset token
                     is_quoted = True        # Start parsing as a string
                     outer_quote_char = char # mark whether the string starts and ends with a ' or "
                 # not opening to string
                 else:
+                    #check if a special character such as an operator or comment
                     if char in specialchars:
                         cleantoken = current_token.replace(' ',  '')  #  strip whitespace from current token
                         if len(cleantoken) > 0:  #  check if whitespace removed token is not empty
                             returnlist.append(cleantoken)  #  add it then
                             current_token = ''
-                        returnlist.append(char)
+                        # if start of comment
+                        if char == comment_char:
+                            break  # comment started; stop tokenizing
+                        else:
+                            returnlist.append(char) #add special character to token list
                     else:
                         current_token += char
 
