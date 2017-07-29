@@ -264,6 +264,30 @@ class Evaluator:
             return False
 
     @staticmethod
+    def levenshtein(s1, s2):
+        # returns levenshtein distance of two strings
+        # code from https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
+        if len(s1) < len(s2):
+            return Evaluator.levenshtein(s2, s1)
+
+        # len(s1) >= len(s2)
+        if len(s2) == 0:
+            return len(s1)
+
+        previous_row = range(len(s2) + 1)
+        for i, c1 in enumerate(s1):
+            current_row = [i + 1]
+            for j, c2 in enumerate(s2):
+                insertions = previous_row[
+                                 j + 1] + 1  # j+1 instead of j since previous_row and current_row are one character longer
+                deletions = current_row[j] + 1  # than s2
+                substitutions = previous_row[j] + (c1 != c2)
+                current_row.append(min(insertions, deletions, substitutions))
+            previous_row = current_row
+
+        return previous_row[-1]
+
+    @staticmethod
     def checkParenCount(expression):
         if(expression.count('(') == expression.count(')')):
             return True
@@ -413,6 +437,15 @@ class Evaluator:
                     return ["E", "Unexpected parameters given"]
             else:
                 return ["E", "Too many parameters given"]
+
+        if (function in ["LEVEN"]):
+            if len(parameters) == 2:
+                if Evaluator.checkAllTypes(paramtypes,  ['Str']):
+                    return ["Num",  Evaluator.levenshtein(parameters[0],parameters[1])]
+                else:
+                    return ["E",  "Unexpected parameters given"]
+            else:
+                return ["E",  "2 Parameters expected"]
 
         if function in ["AVG"]:
             if Evaluator.checkAllTypes(paramtypes,  ['Num']):
@@ -808,7 +841,7 @@ class Evaluator:
         return returnlist
 
 # # # DRIVER CODE# # #
-import time
+import time #used for getting unix time
 
 file = open('script.txt', 'r')
 x = file.readlines()
