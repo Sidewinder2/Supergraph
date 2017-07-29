@@ -245,7 +245,7 @@ class Evaluator:
     function_names = ['PRINT', 'GETTIME',
                       'SUM', 'SUBTRACT','MULTIPLY', 'DIVIDE',
                       'ABS', 'SQRT', 'SIZE',
-                      'LOGBASE', 'LENGTH',
+                      'LOGBASE',
                       'NOT', 'ISNUMERIC', 'HAMMING', 'LEVEN', 'MIN',
                       'MAX', 'SMALLEST', 'LARGEST', 'CHOOSE',
                       'AVG', 'STRREPLACE',
@@ -407,7 +407,7 @@ class Evaluator:
 
         if function == "SIZE":
             if len(parameters) == 1:
-                if paramtypes[0] in ["L", "N", "C"]:
+                if paramtypes[0] in ["L", "N", "C","Str"]:
                     return ["Num", len(parameters[0])]
                 else:
                     return ["E", "Unexpected parameters given"]
@@ -727,13 +727,19 @@ class Evaluator:
         # tokens are parentheses,  math operators,  commas,  function names,  and literals
         print 'Expression: ' + expression
 
-        comment_char = "#"  # character indicating start of comment and to stop tokenizing
-
         specialchars = ['\t', '-', '+', '/', '*', '%', '(', ')', ',']
-        specialchars.append(comment_char)   #add comment character to list of special chars
-        returnlist = []        # return list,  containing the tokens
+        returnlist = []         # return list,  containing the tokens
         current_token = ''
 
+        #used for escaping
+        escape_char = "\\"  # escapes the next character
+        previous_char = None;   # keeps track of character before one being looked at
+
+        #comment variables
+        comment_char = "#"  # character indicating start of comment and to stop tokenizing
+        specialchars.append(comment_char)   #add comment character to list of special chars
+
+        #quote variables
         quote_chars = ["'", '"']    # Characters indicating a quote
         is_quoted = False           # If the text is being processed as a string token
         # The outermost quote character. Determines if ' or " is used to end the string token
@@ -744,13 +750,20 @@ class Evaluator:
             #  if the chars are currently being parsed as strings
             if is_quoted:
                 # check if the string ends
-                if char == outer_quote_char:
+                if char == outer_quote_char and previous_char != escape_char:
                     returnlist.append(outer_quote_char+current_token+outer_quote_char) # add string token
                     current_token = ""                  # reset token
                     is_quoted = False                   # no longer parsing text as a string
                 #  string does not end
                 else:
-                    current_token += char  # add current char to current string
+                    #used an escape char but didn't actually escape anything
+                    if previous_char == escape_char and char not in [escape_char,outer_quote_char]:
+                        current_token += escape_char  # add escape char to current string
+                        current_token += char  # add current char to current string
+                    else:
+                        #used an escape char and did escape
+                        if char != escape_char or previous_char == escape_char:
+                            current_token += char  # add current char to current string
             #  chars are not being parsed as strings
             else:
                 # check opening to string
@@ -778,9 +791,16 @@ class Evaluator:
                     else:
                         current_token += char
 
+            # If you double escaped, then set last character to none
+            if char == escape_char and previous_char == escape_char:
+                previous_char = None
+            else:
+                previous_char = char   #set last character to current one
+
         # check if open quote
         if is_quoted:
             print 'open quote!'
+            return []
 
         if len(current_token) > 0:
             returnlist.append(current_token)
