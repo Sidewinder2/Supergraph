@@ -1,3 +1,4 @@
+PRINT("'"+'"')
 PRINT(SQRT(5.5))
 PRINT(GETTIME())
 PRINT(AVG(10,10.5,6) / (-6))

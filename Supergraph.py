@@ -242,17 +242,17 @@ class Connection:
 
 class Evaluator:
     S = Supergraph()
-    functionNames = ['PRINT', 'GETTIME',
-                     'SUM', 'SUBTRACT','MULTIPLY','DIVIDE',
-                     'ABS', 'SQRT', 'SIZE',
-                     'LOGBASE', 'LENGTH',
-                     'NOT', 'ISNUMERIC', 'HAMMING', 'LEVEN', 'MIN', 
-                     'MAX', 'SMALLEST', 'LARGEST', 'CHOOSE',
-                     'AVG', 'STRREPLACE',
-                     'ADDDATA', 'REMOVEDATA',
-                     'LISTNODES', 'ADDNODES', 'GETNODES', 'REMOVENODES',
-                     'ADDNODEDATA', 'GETNODEDATA', 'REMOVENODEDATA',
-                     'LISTCONNECTIONS','ADDCONNECTIONS','GETCONNECTIONS','REMOVECONNECTIONS']
+    function_names = ['PRINT', 'GETTIME',
+                      'SUM', 'SUBTRACT','MULTIPLY', 'DIVIDE',
+                      'ABS', 'SQRT', 'SIZE',
+                      'LOGBASE', 'LENGTH',
+                      'NOT', 'ISNUMERIC', 'HAMMING', 'LEVEN', 'MIN',
+                      'MAX', 'SMALLEST', 'LARGEST', 'CHOOSE',
+                      'AVG', 'STRREPLACE',
+                      'ADDDATA', 'REMOVEDATA',
+                      'LISTNODES', 'ADDNODES', 'GETNODES', 'REMOVENODES',
+                      'ADDNODEDATA', 'GETNODEDATA', 'REMOVENODEDATA',
+                      'LISTCONNECTIONS','ADDCONNECTIONS','GETCONNECTIONS','REMOVECONNECTIONS']
 
     @staticmethod
     def is_number(s):
@@ -286,22 +286,23 @@ class Evaluator:
         file = open('keywords.txt', 'r')
         keywords = file.readlines()
         for keyword in keywords:
-            Evaluator.functionNames.append(keyword.rstrip())
+            Evaluator.function_names.append(keyword.rstrip())
         return False
 
     @staticmethod
     def categorizeToken(token):
         operators = ['-',  '+',  '/',  '%']
+        quote_chars = ["'", '"']
 
         if token == '(':
             return '('
         elif token == ')':
             return ')'
-        elif token in Evaluator.functionNames:
+        elif token in Evaluator.function_names:
             return 'Fun'
         elif token in operators:
             return 'Op'
-        elif (len(token) >= 2) and ((token[0] == '"') and (token[len(token) - 1] == '"')):  #  check if it's surrounded by quotes
+        elif (len(token) >= 2) and ((token[0] in quote_chars) and (token[len(token) - 1] in quote_chars)):
             return 'Str'
         elif Evaluator.is_number(token):
             return 'Num'
@@ -393,6 +394,7 @@ class Evaluator:
                 return ["E",  "1 Parameter expected"]
 
         if (function in ["SQRT"]):
+            print parameters
             if len(parameters) == 1:
                 if Evaluator.checkAllTypes(paramtypes,  ['Num']):
                     result = parameters[0] ** (1.0 / 2) #raise the power of parameter to 1/2, giving square root
@@ -580,6 +582,7 @@ class Evaluator:
             else:
                 return ["E",  "Unexpected parameters given"]
 
+        # return error if no function defintion found
         return ["E", "Unknown function " + function]
 
     @staticmethod
@@ -724,34 +727,38 @@ class Evaluator:
         print 'Expression: ' + expression
 
         specialchars = ['\t', '-', '+', '/', '*', '%', '(', ')', ',']
-        literalchar = '"'      # 
         returnlist = []        # return list,  containing the tokens
         current_token = ''
-        isQuoted = 0
+
+        quote_chars = ["'", '"']    # Characters indicating a quote
+        is_quoted = False           # If the text is being processed as a string token
+        # The outermost quote character. Determines if ' or " is used to end the string token
+        # This allows the user to use ' or " in strings by using the other one as the outer
+        outer_quote_char = None # will be ' or " once a quote starts
 
         for char in expression:
-            #  if the chars are currently being parsed as literals
-            if isQuoted == 1:
-                if char == literalchar:     # check if the literal ends
-
-                    returnlist.append(literalchar+current_token+literalchar)
-                    current_token = ""             # reset token
-                    # returnlist.append(literalchar)  # add closing marker to signify end of literal in tokens list
-                    isQuoted = 0                   # no longer interpretting text as a literal
-                    # print 'UNQUOTED'
-                #  literal does not end
+            #  if the chars are currently being parsed as strings
+            if is_quoted:
+                # check if the string ends
+                if char == outer_quote_char:
+                    returnlist.append(outer_quote_char+current_token+outer_quote_char) # add string token
+                    current_token = ""                  # reset token
+                    is_quoted = False                   # no longer parsing text as a string
+                #  string does not end
                 else:
-                    current_token += char  # add current char to current literal string
-            #  chars are not being parsed as literals
+                    current_token += char  # add current char to current string
+            #  chars are not being parsed as strings
             else:
-                if char == literalchar: # check opening to literal
-                    cleantoken = current_token.replace(' ',  '')  #  strip whitespace from current token
-                    if len(cleantoken) > 0:  #  check if whitespace removed token is not empty
-                        returnlist.append(cleantoken)  #  add it then
+                # check opening to string
+                if char in quote_chars:
+                    cleantoken = current_token.replace(' ',  '')  # strip whitespace from current token
+                    if len(cleantoken) > 0:  # check if whitespace removed token is not empty
+                        returnlist.append(cleantoken)  # add it then
+
                     current_token = ""
-                    # returnlist.append(literalchar)
-                    isQuoted = 1
-                    # print 'QUOTED'
+                    is_quoted = True        # Start parsing as a string
+                    outer_quote_char = char # mark whether the string starts and ends with a ' or "
+                # not opening to string
                 else:
                     if char in specialchars:
                         cleantoken = current_token.replace(' ',  '')  #  strip whitespace from current token
@@ -763,7 +770,7 @@ class Evaluator:
                         current_token += char
 
         # check if open quote
-        if isQuoted == 1:
+        if is_quoted:
             print 'open quote!'
 
         if len(current_token) > 0:
