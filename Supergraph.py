@@ -91,7 +91,9 @@ class Supergraph:
             Node.addNodeData(i,  varname,  vardata,  vartype)
 
     def getNodeData(self,  nodenames,  varname):
-        #  Adds data to a list of nodes
+        # Gets requested variable from a list of nodes.
+        # Returns a list of 2 lists, the first containing data types and the second containing the values
+        # Won't append data if it doesn't exist for that node
         nodes = self.namesToNodes(nodenames)  #  get list of nodes from keys
         returnlist = [[], []]
         for i in nodes:
@@ -198,7 +200,6 @@ class Node:
             del self.nodedata[varname]
             del self.nodedatatype[varname]
 
-
 class Connection:
     def __init__(self, supergraph, name, leftkey, rightkey):
         self.name = name   # unique name of the connection used as a key
@@ -245,8 +246,10 @@ class Evaluator:
     function_names = ['PRINT', 'GETTIME',
                       'SUM', 'SUBTRACT','MULTIPLY', 'DIVIDE',
                       'ABS', 'SQRT', 'SIZE',
+                      'NOT', 'AND', 'OR',
+                      'EQ', 'GTEQ', 'LTEQ', 'NEQ', 'LT', 'GT',
                       'LOGBASE',
-                      'NOT', 'ISNUMERIC', 'HAMMING', 'LEVEN', 'MIN',
+                      'ISNUMERIC', 'HAMMING', 'LEVEN', 'MIN',
                       'MAX', 'SMALLEST', 'LARGEST', 'CHOOSE',
                       'AVG', 'STRREPLACE',
                       'ADDDATA', 'REMOVEDATA',
@@ -318,6 +321,7 @@ class Evaluator:
     def categorizeToken(token):
         operators = ['-',  '+',  '/',  '%']
         quote_chars = ["'", '"']
+        bools = ['true','false']
 
         if token == '(':
             return '('
@@ -327,6 +331,8 @@ class Evaluator:
             return 'Fun'
         elif token in operators:
             return 'Op'
+        elif token.lower() in bools:
+            return 'Boolean'
         elif (len(token) >= 2) and ((token[0] in quote_chars) and (token[len(token) - 1] in quote_chars)):
             return 'Str'
         elif Evaluator.is_number(token):
@@ -335,7 +341,7 @@ class Evaluator:
             return 'Tab'
         elif token == ', ':
             return 'Comma'
-        elif token == '*':
+        elif token == 'ALL':
             return '*'
         else:
             return '?'     # unknown likely variable
@@ -437,6 +443,70 @@ class Evaluator:
                     return ["E", "Unexpected parameters given"]
             else:
                 return ["E", "Too many parameters given"]
+
+        if function == "NOT":
+            if len(parameters) == 1:
+                if paramtypes[0] == "Boolean":
+                    if parameters[0].lower() == 'false':
+                        return ["Boolean", 'true']
+                    else:
+                        return ["Boolean", 'true']
+                else:
+                    return ["E", "Unexpected parameters given"]
+            else:
+                return ["E", "Too many parameters given"]
+
+        if function == "AND":
+            if len(parameters) >= 2:
+                if Evaluator.checkAllTypes(paramtypes,  ['Boolean']):
+                    for param in parameters:
+                        if param.lower() == 'false':
+                            return ["Boolean", 'false']
+                    return ["Boolean", 'true']
+                else:
+                    return ["E",  "Unexpected parameters given"]
+            else:
+                return ["E",  "2 or more parameters expected"]
+
+        if function == "OR":
+            if len(parameters) >= 2:
+                if Evaluator.checkAllTypes(paramtypes,  ['Boolean']):
+                    for param in parameters:
+                        if param.lower() == 'true':
+                            return ["Boolean", 'true']
+                    return ["Boolean", 'false']
+                else:
+                    return ["E",  "Unexpected parameters given"]
+            else:
+                return ["E",  "2 or more parameters expected"]
+
+        if function == "EQ":
+            # Equals function
+            if len(parameters) >= 2:
+                if not Evaluator.checkAllTypes(paramtypes,  ['C','N','G','L']):
+                    for param in parameters:
+                        if param != parameters[0]:
+                            return ["Boolean", 'false']
+                    return ["Boolean", 'true']
+                else:
+                    return ["E",  "Cannot compare lists"]
+            else:
+                return ["E",  "2 or more parameters expected"]
+
+        if function == "NEQ":
+            # Not Equals function. All items must by unique values to return true
+            if len(parameters) >= 2:
+                if not Evaluator.checkAllTypes(paramtypes,  ['C','N','G','L']):
+                    itemset = []    #set of all unique items
+                    for param in parameters:
+                        if param in itemset:
+                            return ["Boolean", 'false']
+                        itemset.append(param)
+                    return ["Boolean", 'true']
+                else:
+                    return ["E",  "Cannot compare lists"]
+            else:
+                return ["E",  "2 or more parameters expected"]
 
         if (function in ["LEVEN"]):
             if len(parameters) == 2:
@@ -632,8 +702,10 @@ class Evaluator:
         # height
         current_height = 0 # Used for keeping track of the current parenthesis depth
 
+        print "EXPRESSION: "+expression
+
         # tokenize the input expression
-        tokenlist = Evaluator.tokenizeExpression(expression)
+        tokenlist = Evaluator.tokenizeExpressionRegex(expression)
         # print tokenlist
 
         # run through each token and evaluate expression
@@ -696,6 +768,9 @@ class Evaluator:
             elif category == "Num":
                 paramStack[-1].append(float(token))
                 paramType[-1].append(category)
+            elif category == "Boolean":
+                paramStack[-1].append(token)
+                paramType[-1].append(category)
             elif category == "*":
                 paramStack[-1].append(token)
                 paramType[-1].append(category)
@@ -751,7 +826,7 @@ class Evaluator:
                             opHeight.pop()
                             opStack.pop()
 
-        print 'END OF EVALUATION PARAMETERS: ' +str(paramStack)
+        # print 'END OF EVALUATION PARAMETERS: ' +str(paramStack)
 
     # @staticmethod
     @staticmethod
@@ -840,8 +915,81 @@ class Evaluator:
 
         return returnlist
 
+    @staticmethod
+    def tokenizeExpressionRegex(expression):
+        # Improved algorithm for tokenizing a math expression
+
+        is_quoted = False
+        is_escaped = False
+        quote_chars = ["'", '"']
+        outer_quote_char = None  # will be ' or " once a quote starts
+        comment_substring = '#'
+
+        regstring = '(\*|/|\+|\-|\(|\)|==|!=|>=|<=|>|<|in|,|"|\'|#|\\\\'+"|"+comment_substring + ")"
+        initial_tokens = re.split(regstring, expression)    # tokenize the expression initially
+        final_tokens = []   # final token list
+
+        # print initial_tokens
+
+        for token in initial_tokens:
+            if not is_quoted:
+                # not being parsed as a string
+                if token == comment_substring:
+                    # start of a comment; stop tokenizing
+                    break;
+                elif token in quote_chars:
+                    # start of a string
+                    final_tokens.append(token)
+                    is_quoted = True
+                    outer_quote_char = token
+                else:
+                    # a normal token like an operator, parenthesis, function, or variable
+                    cleantoken = token.replace(' ','')
+                    if len(cleantoken) > 0:  #  strip whitespace from current token
+                        final_tokens.append(cleantoken)
+            else:
+                # is quoted
+                if token == "\\":
+                    # at escape char
+                    if is_escaped:
+                        # add escape char as literal
+                        final_tokens[-1] = final_tokens[-1] + "\\"
+                        is_escaped = False;
+                    else:
+                        # first escape character
+                        is_escaped = True;
+                elif token == outer_quote_char:
+                    # at quote char
+                    if not is_escaped:
+                        # Quote is not escaped; end quote mode
+                        is_quoted = False
+                    final_tokens[-1] = final_tokens[-1] + token
+                    is_escaped = False;
+                else:
+                    if len(token) > 0:
+                        # merge any tokens into a single string token
+                        # this is the body of the string
+                        final_tokens[-1] = final_tokens[-1] + token
+                        is_escaped = False;
+
+        return final_tokens
+
 # # # DRIVER CODE# # #
-import time #used for getting unix time
+import time # used for getting unix time
+import Queue
+import re   # regex library
+
+# somestr = "1+2+3-5+(3 - 2 + \"hello + world\" + '5'\) # == 5"
+# #print re.split('(\+|\-|\(|\)|==|")',somestr)
+# print Evaluator.tokenizeExpressionRegex(somestr)
+
+
+# q = Queue.PriorityQueue()
+# q.put((10,'ten'))
+# q.put((1,'one'))
+# q.put((5,'five'))
+# while not q.empty():
+#     print str(q.get())
 
 file = open('script.txt', 'r')
 x = file.readlines()
