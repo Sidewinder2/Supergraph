@@ -327,6 +327,8 @@ class Evaluator:
             return '('
         elif token == ')':
             return ')'
+        elif token == ',':
+            return ','
         elif token in Evaluator.function_names:
             return 'Fun'
         elif token in operators:
@@ -425,7 +427,6 @@ class Evaluator:
                 return ["E",  "1 Parameter expected"]
 
         if (function in ["SQRT"]):
-            print parameters
             if len(parameters) == 1:
                 if Evaluator.checkAllTypes(paramtypes,  ['Num']):
                     result = parameters[0] ** (1.0 / 2) #raise the power of parameter to 1/2, giving square root
@@ -520,7 +521,6 @@ class Evaluator:
         if function in ["AVG"]:
             if Evaluator.checkAllTypes(paramtypes,  ['Num']):
                 if len(parameters) > 0:
-                    print "AVG: "+str(parameters)
                     sum = 0
                     result = 0
                     for param in parameters:
@@ -702,6 +702,8 @@ class Evaluator:
         # height
         current_height = 0 # Used for keeping track of the current parenthesis depth
 
+        previous_category = None
+
         print "EXPRESSION: "+expression
 
         # tokenize the input expression
@@ -721,7 +723,25 @@ class Evaluator:
                 paramStack.append([])
                 paramHeights.append(current_height)
                 paramType.append([])
+            elif category == ',':
+                # To prevent crosstalk between parameters in a function, new parameters are thrown onto the stack
+                # vertically rather than horizontally
+                # The height is kept the same, and when a function is being evaluated at ) they are compressed into one
+                # before evaluation
+                paramStack.append([])
+                paramHeights.append(current_height)
+                paramType.append([])
             elif category == ')':
+
+                #compress the parameters seperated by commas into one list
+                while len(paramStack) > 1 and paramHeights[-2] == paramHeights[-1]:
+                    paramStack[-2] = paramStack[-2] + paramStack[-1]
+                    paramStack.pop()
+                    paramHeights.pop()
+                    paramType[-2] = paramType[-2] + paramType[-1]
+                    paramType.pop()
+
+
                 # set height to one less,  and update height of topmost parameters
                 current_height -= 1
                 paramHeights[-1] = current_height
@@ -760,28 +780,42 @@ class Evaluator:
                 opStack.append(token)
                 opType.append(category)
                 opHeight.append(current_height)
+
+                # If two operations are at the same height there's a problem
+                if len(opHeight) > 1:
+                    if opHeight[-1] == opHeight[-2]:
+                        if opType[-1] == opType[-2]:
+                            raise Exception("Unsuccessful evaluation of operation "+opStack[-2])
+
             elif category == "Str":
                 # Add new parameter to the list at the top of the stack
                 paramStack[-1].append(token[1:-1]) # remove the " from start and end of string
-                # paramStack[-1].append(token)
                 paramType[-1].append(category)
             elif category == "Num":
+                # Add new parameter to the list at the top of the stack
                 paramStack[-1].append(float(token))
                 paramType[-1].append(category)
             elif category == "Boolean":
+                # Add new parameter to the list at the top of the stack
                 paramStack[-1].append(token)
                 paramType[-1].append(category)
             elif category == "*":
+                # Add new parameter to the list at the top of the stack
                 paramStack[-1].append(token)
                 paramType[-1].append(category)
             elif category == "?":
+                # Unknown category; search supergraph for data and inject it if possible
                 data = Evaluator.S.getData(token)
                 if data is not None:
                     paramStack[-1].append(data[1])
                     paramType[-1].append(data[0])
+                else:
+                    # Failed to find anything
+                    raise Exception("Unable to find value of "+token)
 
-            # At end,  check if a binary operation is possible
-            if len(opStack) > 0:
+            # At end,  check if a binary operation is possible.
+            # Don't process operations immediately when encountered to prevent accidental postfix processing
+            if len(opStack) > 0 and category not in ["Op","Fun"]:
                 if opType[-1] == 'Op':
                     # check if 2 or more parameters in topmost list
                     if len(paramStack[-1]) > 1:
@@ -797,7 +831,7 @@ class Evaluator:
                             # Report error
                             if result[0] == "E":
                                 print result
-                                return
+                                raise Exception("ERROR " + result[1])
                             # put results in stacks
                             paramStack[-1].append(result[1])
                             paramType[-1].append(result[0])
@@ -817,7 +851,7 @@ class Evaluator:
                             # Report error
                             if result[0] == "E":
                                 print result
-                                return
+                                raise Exception("ERROR " + result[1])
                             # put results in stacks
                             paramStack[-1].append(result[1])
                             paramType[-1].append(result[0])
@@ -825,6 +859,7 @@ class Evaluator:
                             opType.pop()
                             opHeight.pop()
                             opStack.pop()
+            previous_category = category
 
         # print 'END OF EVALUATION PARAMETERS: ' +str(paramStack)
 
