@@ -246,8 +246,9 @@ class Evaluator:
     function_names = ['PRINT', 'GETTIME',
                       'SUM', 'SUBTRACT','MULTIPLY', 'DIVIDE',
                       'ABS', 'SQRT', 'SIZE',
-                      'NOT', 'AND', 'OR',
+                      'NOT', 'AND', 'OR', 'XOR', 'XNOR',
                       'EQ', 'GTEQ', 'LTEQ', 'NEQ', 'LT', 'GT',
+                      'SORT',
                       'LOGBASE',
                       'ISNUMERIC', 'HAMMING', 'LEVEN', 'MIN',
                       'MAX', 'SMALLEST', 'LARGEST', 'CHOOSE',
@@ -319,7 +320,7 @@ class Evaluator:
 
     @staticmethod
     def categorizeToken(token):
-        operators = ['-',  '+',  '/',  '%']
+        operators = ['-',  '+',  '/', '*', '%','==','!=','>','<','>=','<=','||','&&']
         quote_chars = ["'", '"']
         bools = ['true','false']
 
@@ -377,18 +378,35 @@ class Evaluator:
                 return ["E", "Unexpected parameters given"]
 
         if function in ["+", "SUM"]:
-            for type in paramtypes:
-                if type not in ["Str", "Num"]:
-                    return ["E",  "Input of type "+type+" cannot be summed"]
-                if type != "Num":
-                    result = ""
-                    for param in parameters:
-                        result += str(param)
-                    return ["Str", result]
-            result = 0
-            for param in parameters:
-                result += float(param)
-            return ["Num",  result]
+            # General sumation function.
+            # if given 1 list will sum all items in that list
+            # multiple lists will merge the lists into one
+            # will concatenate Strings and add numbers
+            if len(parameters) == 1 and paramtypes[0] == 'L':
+                # add all the items in a single list together
+                params = parameters[0]
+                return Evaluator.evaluateFunction("SUM",params[1],params[0])
+            if Evaluator.checkAllTypes(paramtypes, ['L']):
+                # merge multiple lists together
+                returnlist = [[],[]]
+                for param in parameters:
+                    returnlist[0].extend((param[0]))
+                    returnlist[1].extend((param[1]))
+                return ["L",returnlist]
+            elif Evaluator.checkAllTypes(paramtypes, ['Num','Str']):
+                # Add numbers and concat strings. A mix will produce a string
+                for type in paramtypes:
+                    if type not in ["Str", "Num"]:
+                        return ["E",  "Input of type "+type+" cannot be summed"]
+                    if type != "Num":
+                        result = ""
+                        for param in parameters:
+                            result += str(param)
+                        return ["Str", result]
+                result = 0
+                for param in parameters:
+                    result += float(param)
+                return ["Num",  result]
 
         if function in ["-", "SUBTRACT"]:
             if len(parameters) == 2:
@@ -412,6 +430,15 @@ class Evaluator:
             if len(parameters) == 2:
                 if Evaluator.checkAllTypes(paramtypes,  ['Num']):
                     return ["Num",  float(parameters[0]) / float(parameters[1])]
+                else:
+                    return ["E",  "Unexpected parameters given"]
+            else:
+                return ["E",  "2 Parameters expected"]
+
+        if function in ["%", "MOD"]:
+            if len(parameters) == 2:
+                if Evaluator.checkAllTypes(paramtypes,  ['Num']):
+                    return ["Num",  float(parameters[0]) % float(parameters[1])]
                 else:
                     return ["E",  "Unexpected parameters given"]
             else:
@@ -457,7 +484,7 @@ class Evaluator:
             else:
                 return ["E", "Too many parameters given"]
 
-        if function == "AND":
+        if function in ["&&","AND"]:
             if len(parameters) >= 2:
                 if Evaluator.checkAllTypes(paramtypes,  ['Boolean']):
                     for param in parameters:
@@ -469,12 +496,42 @@ class Evaluator:
             else:
                 return ["E",  "2 or more parameters expected"]
 
-        if function == "OR":
+        if function in ["||","OR"]:
             if len(parameters) >= 2:
                 if Evaluator.checkAllTypes(paramtypes,  ['Boolean']):
                     for param in parameters:
                         if param.lower() == 'true':
                             return ["Boolean", 'true']
+                    return ["Boolean", 'false']
+                else:
+                    return ["E",  "Unexpected parameters given"]
+            else:
+                return ["E",  "2 or more parameters expected"]
+
+        if function == "XOR":
+            if len(parameters) >= 2:
+                if Evaluator.checkAllTypes(paramtypes,  ['Boolean']):
+                    truecount = 0
+                    for param in parameters:
+                        if param.lower() == 'true':
+                            truecount += 1
+                    if (truecount % 2) == 1:
+                        return ["Boolean", 'true']
+                    return ["Boolean", 'false']
+                else:
+                    return ["E",  "Unexpected parameters given"]
+            else:
+                return ["E",  "2 or more parameters expected"]
+
+        if function == "XNOR":
+            if len(parameters) >= 2:
+                if Evaluator.checkAllTypes(paramtypes,  ['Boolean']):
+                    truecount = 0
+                    for param in parameters:
+                        if param.lower() == 'true':
+                            truecount += 1
+                    if (truecount % 2) == 0:
+                        return ["Boolean", 'true']
                     return ["Boolean", 'false']
                 else:
                     return ["E",  "Unexpected parameters given"]
@@ -508,6 +565,71 @@ class Evaluator:
                     return ["E",  "Cannot compare lists"]
             else:
                 return ["E",  "2 or more parameters expected"]
+
+        if function in [">=","GTEQ"]:
+            # Greater than. Will return false if items are not sorted in descending order
+            if len(parameters) >= 2:
+                if Evaluator.checkAllTypes(paramtypes,  ['Num']):
+                    for index in range(1,len(parameters)):
+                        if parameters[index-1] <= parameters[index]:
+                            return ["Boolean", 'false']
+                    return ["Boolean", 'true']
+                else:
+                    return ["E",  "Unexpected parameters given"]
+            else:
+                return ["E",  "2 or more parameters expected"]
+
+        if function in ["<=","LTEQ"]:
+            # Greater than. Will return false if items are not sorted in descending order
+            if len(parameters) >= 2:
+                if Evaluator.checkAllTypes(paramtypes,  ['Num']):
+                    for index in range(1,len(parameters)):
+                        if parameters[index-1] >= parameters[index]:
+                            return ["Boolean", 'false']
+                    return ["Boolean", 'true']
+                else:
+                    return ["E",  "Unexpected parameters given"]
+            else:
+                return ["E",  "2 or more parameters expected"]
+
+        if function in [">","GT"]:
+            # Greater than. Will return false if items are not sorted in descending order
+            if len(parameters) >= 2:
+                if Evaluator.checkAllTypes(paramtypes,  ['Num']):
+                    for index in range(1,len(parameters)):
+                        if parameters[index-1] < parameters[index]:
+                            return ["Boolean", 'false']
+                    return ["Boolean", 'true']
+                else:
+                    return ["E",  "Unexpected parameters given"]
+            else:
+                return ["E",  "2 or more parameters expected"]
+
+        if function in ["<","LT"]:
+            # Greater than. Will return false if items are not sorted in descending order
+            if len(parameters) >= 2:
+                if Evaluator.checkAllTypes(paramtypes,  ['Num']):
+                    for index in range(1,len(parameters)):
+                        if parameters[index-1] > parameters[index]:
+                            return ["Boolean", 'false']
+                    return ["Boolean", 'true']
+                else:
+                    return ["E",  "Unexpected parameters given"]
+            else:
+                return ["E",  "2 or more parameters expected"]
+
+        if function in ["SORT"]:
+            # Returns a sorted list
+            if Evaluator.checkAllTypes(paramtypes,  ['Num']):
+                sortedlist = parameters
+                sortedlist.sort()
+                return ['L',[['Num']*len(parameters),sortedlist]]
+            elif Evaluator.checkAllTypes(paramtypes,  ['Str']):
+                sortedlist = parameters
+                sortedlist.sort()
+                return ['L', [['Str'] * len(parameters), sortedlist]]
+            else:
+                return ["E",  "Unexpected parameters given"]
 
         if (function in ["LEVEN"]):
             if len(parameters) == 2:
@@ -708,7 +830,7 @@ class Evaluator:
 
         # tokenize the input expression
         tokenlist = Evaluator.tokenizeExpressionRegex(expression)
-        # print tokenlist
+        print tokenlist
 
         # run through each token and evaluate expression
         for token in tokenlist:
@@ -960,7 +1082,7 @@ class Evaluator:
         outer_quote_char = None  # will be ' or " once a quote starts
         comment_substring = '#'
 
-        regstring = '(\*|/|\+|\-|\(|\)|==|!=|>=|<=|>|<|in|,|"|\'|#|\\\\'+"|"+comment_substring + ")"
+        regstring = '(\*|/|\+|\-|\(|\)|%|==|!=|>=|<=|>|<|&&|\\|\\||in|,|"|\'|#|\\\\'+"|"+comment_substring + ")"
         initial_tokens = re.split(regstring, expression)    # tokenize the expression initially
         final_tokens = []   # final token list
 
@@ -1017,7 +1139,6 @@ import re   # regex library
 # somestr = "1+2+3-5+(3 - 2 + \"hello + world\" + '5'\) # == 5"
 # #print re.split('(\+|\-|\(|\)|==|")',somestr)
 # print Evaluator.tokenizeExpressionRegex(somestr)
-
 
 # q = Queue.PriorityQueue()
 # q.put((10,'ten'))
