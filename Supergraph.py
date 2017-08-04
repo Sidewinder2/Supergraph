@@ -1,14 +1,19 @@
 
 class Supergraph:
     def __init__(self):
+        self.keylist = []          # list of keys. Prevents a connection, graph and a node having the same name
         self.graphlist = {}        # dictionary maintaining a graph name to graph pointer conversion
         self.nodelist = {}         # dictionary maintaining a node name to node pointer conversion
         self.connectionlist = {}   # dictionary maintaining a connection name to connection pointer conversion
+
         self.supergraphdata = {}   # dictionary maintaining a variable name to variable data conversion
         self.supergraphdatatype = {}   # maintains the typing of all data stored in datalist
 
         self.connectionidprefix = "Connection"
         self.connectionidsuffix = 0   # ID counter for naming connections automatically
+
+    def getKeyList(self):
+        return self.keylist
 
     def addData(self,  varname,  vardata,  vartype):
         if (varname not in self.supergraphdata) and varname != "name":
@@ -29,13 +34,15 @@ class Supergraph:
 
     def addGraph(self,  graphname,  nodekeys = [],  connectionkeys = []):
         # Adds a graph to the database
-        if (graphname not in self.graphlist):
+        if (graphname not in self.graphlist and graphname not in self.keylist):
             self.graphlist[graphname] = Graph(self,  graphname,  nodekeys,  connectionkeys)
+            self.keylist.append(graphname)
 
     def removeGraph(self,  graphname):
         #  Removes a graph from the database
-        if (graphname not in self.graphlist):
+        if (graphname in self.graphlist):
             del self.graphlist[graphname]
+            self.keylist.remove(graphname)
 
     def listGraphs(self):
         #  Lists names of all existing graphs
@@ -51,13 +58,15 @@ class Supergraph:
 
     def addNode(self,  nodename):
         #  Adds a node to the database
-        if (nodename not in self.nodelist):
+        if (nodename not in self.nodelist and nodename not in self.keylist):
             self.nodelist[nodename] = Node(self, nodename)
+            self.keylist.append(nodename)
 
     def removeNodes(self,  nodenames):
         verifiednodes = self.verifyNodeNames(nodenames)     # get list of nodes from keys
         for nodename in verifiednodes:
             del self.nodelist[nodename]
+            self.keylist.remove(nodename)
 
     def getNodeList(self):
         # lists the node keys
@@ -123,12 +132,14 @@ class Supergraph:
             for right in rightnames:
                 connectionname = self.getNextConnectionName()
                 self.addConnection(connectionname, left, right)
+                self.keylist.append(connectionname)
 
     def removeConnections(self,  connectionnames):
         # removes the specified connections,  if they exist
         for connection in connectionnames:
             if (connection in self.connectionlist):
                 del self.connectionlist[connection]
+                self.keylist.remove(connection)
 
     def getConnectionList(self):
         # lists the node keys
@@ -142,7 +153,7 @@ class Supergraph:
         # Used for automatically naming connections
         # Will update id counter to make it as up to date as possible
         connectname = self.connectionidprefix + str(self.connectionidsuffix)
-        while connectname in self.connectionlist:
+        while (connectname in self.connectionlist) or (connectname in self.keylist):
             self.connectionidsuffix += 1
             connectname = self.connectionidprefix + str(self.connectionidsuffix)
         return connectname
@@ -170,6 +181,26 @@ class Graph:
         self.name = name                           # name uniquely identifying the graph
         self.nodekeys = nodekeys                   # list of node keys used in this graph
         self.connectionkeys = connectionkeys       # list of connection keys used in this graph
+
+    def addConnections(self,connections):
+        for connection in connections:
+            if connection in self.connectionkeys:
+                self.connectionkeys.remove(connection)
+
+    def removeConnections(self,connections):
+        for connection in connections:
+            if connection not in self.connectionkeys:
+                self.connectionkeys.append(connection)
+
+    def addNodes(self, nodes):
+        for node in nodes:
+            if node not in self.nodekeys:
+                self.nodekeys.append(node)
+
+    def removeNodes(self,nodes):
+        for node in nodes:
+            if node in self.nodekeys:
+                self.nodekeys.remove(node)
 
 class Node:
     def __init__(self, supergraph, name):
@@ -243,7 +274,7 @@ class Connection:
 
 class Evaluator:
     S = Supergraph()
-    function_names = ['PRINT', 'GETTIME',
+    function_names = ['PRINT','PRINTKEYS', 'GETTIME',
                       'SUM', 'SUBTRACT','MULTIPLY', 'DIVIDE',
                       'ABS', 'SQRT', 'SIZE',
                       'NOT', 'AND', 'OR', 'XOR', 'XNOR',
@@ -369,6 +400,10 @@ class Evaluator:
 
         if function == "PRINT":
             print parameters
+            return ["V",  ""]
+
+        if function == "PRINTKEYS":
+            print Evaluator.S.getKeyList()
             return ["V",  ""]
 
         if function == "GETTIME":
@@ -538,7 +573,7 @@ class Evaluator:
             else:
                 return ["E",  "2 or more parameters expected"]
 
-        if function == "EQ":
+        if function in ["==","EQ"]:
             # Equals function
             if len(parameters) >= 2:
                 if not Evaluator.checkAllTypes(paramtypes,  ['C','N','G','L']):
@@ -551,7 +586,7 @@ class Evaluator:
             else:
                 return ["E",  "2 or more parameters expected"]
 
-        if function == "NEQ":
+        if function in ["!=","NEQ"]:
             # Not Equals function. All items must by unique values to return true
             if len(parameters) >= 2:
                 if not Evaluator.checkAllTypes(paramtypes,  ['C','N','G','L']):
@@ -766,10 +801,11 @@ class Evaluator:
             Supergraph.printConnectionList(Evaluator.S)
             return ["V", ""]
 
-        if function in ["ADDCONNECTIONS"]:
+        if function == "ADDCONNECTIONS":
             if len(parameters) == 2:
                 if Evaluator.checkAllTypes(paramtypes,  ['N']):
                     Evaluator.S.addConnections(parameters[0], parameters[1])
+                    return ["V", ""]
                 else:
                     return ["E",  "Unexpected parameters given"]
             else:
@@ -812,7 +848,16 @@ class Evaluator:
         return ["E", "Unknown function " + function]
 
     @staticmethod
-    def evaluateExpression(expression):
+    def evaluateExpression(expression, this = ""):
+        # Evaluates an expression. Tokenizes it, then evaluates the tokens
+        # this variables references what the keyword THIS references in the supergraph
+        print "EXPRESSION: "+expression
+        tokenlist = Evaluator.tokenizeExpressionRegex(expression, this)
+        #print tokenlist
+        return Evaluator.evaluateTokens(tokenlist)
+
+    @staticmethod
+    def evaluateTokens(tokenlist, this = ""):
         # parameter stacks
         paramStack = [[]]  # holds parameter lists
         paramHeights = [0] # Maintains the parenthesis depth of each list in paramStack
@@ -826,11 +871,7 @@ class Evaluator:
 
         previous_category = None
 
-        print "EXPRESSION: "+expression
-
         # tokenize the input expression
-        tokenlist = Evaluator.tokenizeExpressionRegex(expression)
-        print tokenlist
 
         # run through each token and evaluate expression
         for token in tokenlist:
