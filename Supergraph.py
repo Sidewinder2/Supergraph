@@ -15,6 +15,47 @@ class Supergraph:
     def getKeyList(self):
         return self.keylist
 
+    def verifyKeys(self, keylist):
+        # Will remove any names from list that don't point to anything
+        returnlist = []
+        for key in keylist:
+            if key in self.keylist:
+                returnlist.append(key)  # add valid name to list
+        return returnlist
+
+    def getPointerData(self, pointers = [], this = ""):
+        # Pulls data from supergraph when given a pointer such as NODE.DATA
+        returnlist = [[], []]
+        reference = ""
+        if len(pointers) == 1:
+            if pointers[0] == "THIS":
+                if this == "":
+                    raise Exception("Keyword THIS does not currently reference something")
+                reference = this
+            else:
+                reference = pointers[0]
+            
+            if reference in self.nodelist.keys():
+                return [["N"],[reference]]
+            elif reference in self.connectionlist.keys():
+                return [["C"], [reference]]
+            elif reference in self.graphlist.keys():
+                return [["G"], [reference]]
+        elif len(pointers) == 2:
+            if pointers[0] == "THIS":
+                if this == "":
+                    raise Exception("Keyword THIS does not currently reference something")
+                reference = this
+            else:
+                reference = pointers[0]
+            if reference in self.nodelist.keys():
+                return Supergraph.getNodeData(self, [reference], pointers[1])
+            # elif reference in self.connectionlist.keys():
+            #     return Supergraph.getConnectionData(self, [reference], pointers[1])
+            # elif reference in self.graphlist.keys():
+            #     return Supergraph.getGraphData(self, [reference], pointers[1])
+        return None
+
     def addData(self,  varname,  vardata,  vartype):
         if (varname not in self.supergraphdata) and varname != "name":
             self.supergraphdata[varname] = vardata
@@ -852,9 +893,9 @@ class Evaluator:
         # Evaluates an expression. Tokenizes it, then evaluates the tokens
         # this variables references what the keyword THIS references in the supergraph
         print "EXPRESSION: "+expression
-        tokenlist = Evaluator.tokenizeExpressionRegex(expression, this)
+        tokenlist = Evaluator.tokenizeExpressionRegex(expression)
         #print tokenlist
-        return Evaluator.evaluateTokens(tokenlist)
+        return Evaluator.evaluateTokens(tokenlist, this)
 
     @staticmethod
     def evaluateTokens(tokenlist, this = ""):
@@ -868,6 +909,8 @@ class Evaluator:
         opType = []        # Determines whether an operator or a function
         # height
         current_height = 0 # Used for keeping track of the current parenthesis depth
+
+        data_pointer = "."  # Used for pointers that pull data from supergraph. NAME.DATA
 
         previous_category = None
 
@@ -973,8 +1016,14 @@ class Evaluator:
                     paramStack[-1].append(data[1])
                     paramType[-1].append(data[0])
                 else:
-                    # Failed to find anything
-                    raise Exception("Unable to find value of "+token)
+                    # Failed to find anything in supergraph; look in objects in supergraph
+                    pointers = token.split(data_pointer)
+                    data = Supergraph.getPointerData(Evaluator.S, pointers, this)
+                    if data is not None:
+                        paramStack[-1].append(data[1][0])
+                        paramType[-1].append(data[0][0])
+                    else:
+                        raise Exception("Unable to find value of "+token)
 
             # At end,  check if a binary operation is possible.
             # Don't process operations immediately when encountered to prevent accidental postfix processing
