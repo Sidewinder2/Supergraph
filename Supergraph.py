@@ -254,7 +254,7 @@ class Node:
         return self.name
 
     def addNodeData(self,  varname,  vardata,  vartype):
-        if varname not in self.nodedata and varname != "name":
+        if varname != "name":
             self.nodedata[varname] = vardata
             self.nodedatatype[varname] = vartype
 
@@ -328,7 +328,8 @@ class Evaluator:
                       'ADDDATA', 'REMOVEDATA',
                       'LISTNODES', 'ADDNODES', 'GETNODES', 'REMOVENODES',
                       'ADDNODEDATA', 'GETNODEDATA', 'REMOVENODEDATA',
-                      'LISTCONNECTIONS','ADDCONNECTIONS','GETCONNECTIONS','REMOVECONNECTIONS']
+                      'LISTCONNECTIONS','ADDCONNECTIONS','GETCONNECTIONS','REMOVECONNECTIONS',
+                      'QUERY']
 
 
     @staticmethod
@@ -440,14 +441,20 @@ class Evaluator:
             return ["E",  "Cannot manipulate Void type"]
 
         if function == "PRINT":
-            print parameters
+            # Basic print; will unpack values if only 1 is given
+            if len(parameters) == 1:
+                print parameters[0]
+            else:
+                print parameters
             return ["V",  ""]
 
         if function == "PRINTKEYS":
+            # Prints all existing keys in the supergraph
             print Evaluator.S.getKeyList()
             return ["V",  ""]
 
         if function == "GETTIME":
+            # Gets the time in milliseconds from 1970
             if len(parameters) == 0:
                 return ["Num", time.time()]
             else:
@@ -885,6 +892,23 @@ class Evaluator:
             else:
                 return ["E",  "Unexpected parameters given"]
 
+        if function in ["QUERY"]:
+            # Run a query on a selected group of objects, only giving the ones where the expression returns true
+            # Keyword THIS is used for this function to refer to object being currently queried
+            if len(parameters) == 2:
+                # object list, query expression
+                if paramtypes[0] in ['N', 'C'] and paramtypes[1] == 'Str':
+                    returnlist = [[paramtypes[0]],[]] # Maintains list of keys that satisfied query
+                    for item in parameters[0]:
+                        result = Evaluator.evaluateExpression(parameters[1],item)
+                        if result == [[["Boolean"]],[["true"]]]:
+                            returnlist[1].append(item)
+                    return returnlist
+                else:
+                    return ["E", "Unexpected parameters given"]
+            else:
+                return ["E", "Unexpected parameters given"]
+
         # return error if no function defintion found
         return ["E", "Unknown function " + function]
 
@@ -892,7 +916,7 @@ class Evaluator:
     def evaluateExpression(expression, this = ""):
         # Evaluates an expression. Tokenizes it, then evaluates the tokens
         # this variables references what the keyword THIS references in the supergraph
-        print "EXPRESSION: "+expression
+        # print "EXPRESSION: "+expression
         tokenlist = Evaluator.tokenizeExpressionRegex(expression)
         #print tokenlist
         return Evaluator.evaluateTokens(tokenlist, this)
@@ -1073,9 +1097,11 @@ class Evaluator:
                             opStack.pop()
             previous_category = category
 
-        # print 'END OF EVALUATION PARAMETERS: ' +str(paramStack)
+        # print 'END OF EVALUATION PARAMETERS: ',paramType,paramStack
 
-    # @staticmethod
+        if len(paramStack) == 1:
+            return [paramType,paramStack]
+
     @staticmethod
     def tokenizeExpression(expression):
         # returns a list of tokens in the expression
