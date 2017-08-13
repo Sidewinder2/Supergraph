@@ -1,7 +1,8 @@
+PRINT(EQ(2,"true"))
 2+2
 TRUE && TRUE
 PRINT()
-PRINT(SORT('b','a','c')+SORT('b','a','c'))
+PRINT(SORT('b','a','c')+SORT('b','a','c',45,2))
 PRINT(LT(2,3,4))
 PRINT(2.72 % 2.5)
 PRINT(TRUE || FALSE)
@@ -40,7 +41,7 @@ ADDDATA("two",2)
 ADDCONNECTIONS(n1,n1)
 PRINTKEYS()
 #PRINT(SIZE(n1))
-ADDNODEDATA(n1,"var1",123)
+#ADDNODEDATA(n1,"var1",123)
 ADDNODEDATA(n2,"var1",321)
 PRINT(QUERY(n1,"THIS.var1 == 321"))
 #GETNODEDATA(n1,"var1")
