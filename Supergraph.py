@@ -25,8 +25,6 @@ class Supergraph:
 
     def getPointerData(self, pointers = [], this = ""):
         # Pulls data from supergraph when given a pointer such as NODE.DATA
-        returnlist = [[], []]
-        reference = ""
         if len(pointers) == 1:
             if pointers[0] == "THIS":
                 if this == "":
@@ -36,11 +34,11 @@ class Supergraph:
                 reference = pointers[0]
             
             if reference in self.nodelist.keys():
-                return [["N"],[reference]]
+                return [["N"],reference]
             elif reference in self.connectionlist.keys():
-                return [["C"], [reference]]
+                return [["C"], reference]
             elif reference in self.graphlist.keys():
-                return [["G"], [reference]]
+                return [["G"], reference]
         elif len(pointers) == 2:
             if pointers[0] == "THIS":
                 if this == "":
@@ -89,7 +87,7 @@ class Supergraph:
             del self.graphlist[graphname]
             self.keylist.remove(graphname)
 
-    def getGraphList(self):
+    def getAllGraphKeys(self):
         #  Lists names of all existing graphs
         return self.graphlist.keys()
 
@@ -125,7 +123,7 @@ class Supergraph:
             del self.nodelist[nodename]
             self.keylist.remove(nodename)
 
-    def getNodeList(self):
+    def getAllNodeKeys(self):
         # lists the node keys
         return self.nodelist.keys()
 
@@ -185,8 +183,10 @@ class Supergraph:
     def addConnections(self,  leftnames,  rightnames):
         # Adds connections to the database
         # Will connect every node from left side to right side,  resulting in L * R connections
-        for left in leftnames:
-            for right in rightnames:
+        verifiedleftnames = self.verifyNodeNames(leftnames)
+        verifiedrightnames = self.verifyNodeNames(rightnames)
+        for left in verifiedleftnames:
+            for right in verifiedrightnames:
                 connectionname = self.getNextConnectionName()
                 self.addConnection(connectionname, left, right)
                 self.keylist.append(connectionname)
@@ -198,7 +198,7 @@ class Supergraph:
                 del self.connectionlist[connection]
                 self.keylist.remove(connection)
 
-    def getConnectionList(self):
+    def getAllConnectionKeys(self):
         # lists the node keys
         return self.connectionlist.keys()
 
@@ -231,6 +231,33 @@ class Supergraph:
         for name in verifiednames:
             returnlist.append(self.connectionlist[name]) # get pointer from node list
         return returnlist
+    
+    def addConnectionData(self,  connectionnames,  varname,  vardata,  vartype):
+        #  Adds data to a list of connections
+        connections = self.namesToConnections(connectionnames)  #  get list of connections from keys
+        for i in connections:
+            Connection.addConnectionData(i,  varname,  vardata,  vartype)
+
+    def getConnectionData(self,  connectionnames,  varname):
+        # Gets requested variable from a list of connections.
+        # Returns a list of 2 lists, the first containing data types and the second containing the values
+        # Won't append data if it doesn't exist for that connection
+        connections = self.namesToConnections(connectionnames)  #  get list of connections from keys
+        returnlist = [[], []]
+        for i in connections:
+            typevalue = Connection.getConnectionData(i,  varname)   # get the array containing the type and value of the data
+            if typevalue is not None:
+                type = typevalue[0]
+                value = typevalue[1]
+                returnlist[0].append(type)
+                returnlist[1].append(value)
+        return returnlist
+
+    def removeConnectionData(self,  connectionnames,  varname):
+        #  Removes data from a list of connections
+        connections = self.namesToConnections(connectionnames)  #  get list of connections from keys
+        for connection in connections:
+            Connection.removeConnectionData(connections[i],  varname)
 
 class Graph:
     def __init__(self, supergraph, name, nodekeys, connectionkeys):
@@ -276,7 +303,7 @@ class Node:
         return self.name
 
     def addNodeData(self,  varname,  vardata,  vartype):
-        if varname != "name":
+        if varname.lower() != "name":
             self.nodedata[varname] = vardata
             self.nodedatatype[varname] = vartype
 
@@ -285,7 +312,7 @@ class Node:
         if varname in self.nodedata:
             # print "RETURNING " + self.name + ": "+str([self.nodedatatype[varname], self.nodedata[varname]])
             return [self.nodedatatype[varname], self.nodedata[varname]]
-        if varname == "name":
+        if varname.lower() == "name":
             return ["Str", self.name]
         return None
 
@@ -313,7 +340,7 @@ class Connection:
         return self.rightkey
 
     def addConnectionData(self,  varname,  vardata,  vartype):
-        if varname not in self.connectiondata and varname != "name":
+        if varname.lower() != "name":
             self.connectiondata[varname] = vardata
             self.connectiondatatype[varname] = vartype
 
@@ -322,11 +349,11 @@ class Connection:
         if varname in self.connectiondata:
             # print "RETURNING " + self.name + ": "+str([self.nodedatatype[varname], self.nodedata[varname]])
             return [self.connectiondatatype[varname], self.connectiondata[varname]]
-        if varname == "leftname":
+        if varname.lower() == "leftname":
             return ["Str", self.leftkey]
-        if varname == "rightname":
+        if varname.lower() == "rightname":
             return ["Str", self.rightkey]
-        if varname == "name":
+        if varname.lower() == "name":
             return ["Str", self.name]
         return None
 
@@ -346,11 +373,14 @@ class Evaluator:
                       'LOGBASE',
                       'ISNUMERIC', 'HAMMING', 'LEVEN', 'MIN',
                       'MAX', 'SMALLEST', 'LARGEST', 'CHOOSE',
-                      'AVG', 'STRREPLACE',
+                      'AVG',
+                      'RANDOM', 'RANDOMINT',
+                      'STRREPLACE',
                       'ADDDATA', 'REMOVEDATA',
                       'LISTNODES', 'ADDNODES', 'GETNODES', 'REMOVENODES',
                       'ADDNODEDATA', 'GETNODEDATA', 'REMOVENODEDATA',
                       'LISTCONNECTIONS','ADDCONNECTIONS','GETCONNECTIONS','REMOVECONNECTIONS',
+                      'ADDCONNECTIONDATA', 'GETCONNECTIONDATA', 'REMOVECONNECTIONDATA',
                       'LISTGRAPHS', 'ADDGRAPHS', 'GETGRAPHS', 'REMOVEGRAPHS',
                       'QUERY']
 
@@ -463,8 +493,6 @@ class Evaluator:
 
         if "E" in paramtypes:
             return ["E",  "General Failure"]
-        if "V" in paramtypes:
-            return ["E",  "Cannot manipulate Void type"]
 
         if function == "PRINT":
             # Basic print; will unpack values if only 1 is given
@@ -574,7 +602,7 @@ class Evaluator:
 
         if function == "SIZE":
             if len(parameters) == 1:
-                if paramtypes[0] in ["L", "N", "C","Str"]:
+                if paramtypes[0] in ["L","Str"]:
                     return ["Num", len(parameters[0])]
                 else:
                     return ["E", "Unexpected parameters given"]
@@ -650,7 +678,7 @@ class Evaluator:
         if function in ["==","EQ"]:
             # Equals function
             if len(parameters) >= 2:
-                if not Evaluator.checkAllTypes(paramtypes,  ['C','N','G','L']):
+                if not Evaluator.checkAllTypes(paramtypes,  ['L']):
                     for index in range(1,len(parameters)):
                         if parameters[index] != parameters[0] or paramtypes[index] != paramtypes[0]:
                             return ["Boolean", 'false']
@@ -663,7 +691,7 @@ class Evaluator:
         if function in ["!=","NEQ"]:
             # Not Equals function. All items must by unique values to return true
             if len(parameters) >= 2:
-                if not Evaluator.checkAllTypes(paramtypes,  ['C','N','G','L']):
+                if not Evaluator.checkAllTypes(paramtypes,  ['L']):
                     itemset = []    #set of all unique items
                     for param in parameters:
                         if param in itemset:
@@ -770,10 +798,32 @@ class Evaluator:
             else:
                 return ["E",  "Unexpected parameters given"]
 
+        if function in ["RANDOM"]:
+            # Returns random float between 0 and x, or in range if two numbers given
+            if Evaluator.checkAllTypes(paramtypes, ['Num']):
+                if len(parameters) == 2:
+                        return ["Num", random.uniform(parameters[0],parameters[1])]
+                if len(parameters) == 1:
+                        return ["Num", random.uniform(0,parameters[0])]
+                return ["E", "1 or 2 numbers expected"]
+            else:
+                return ["E", "Unexpected parameters given"]
+
+        if function in ["RANDOMINT"]:
+            # Returns random int between 0 and x, or in range if two numbers given
+            if Evaluator.checkAllTypes(paramtypes, ['Num']):
+                if len(parameters) == 2:
+                        return ["Num", int(random.uniform(parameters[0],parameters[1]))]
+                if len(parameters) == 1:
+                        return ["Num", int(random.uniform(0,parameters[0]))]
+                return ["E", "1 or 2 numbers expected"]
+            else:
+                return ["E", "Unexpected parameters given"]
+
         if function in ["ADDDATA"]:
             if len(parameters) == 2:
                 #  varname,  vardata
-                if (paramtypes[0] == 'Str') and (paramtypes[1] in ['Str', 'Num', 'N', 'C', 'L']):
+                if (paramtypes[0] == 'Str'):
                     # print Supergraph.verifyNodeNames(Evaluator.S, parameters[0])
                     Supergraph.addData(Evaluator.S, parameters[0], parameters[1], paramtypes[1])
                     return ["V",  ""]
@@ -812,19 +862,16 @@ class Evaluator:
             # converts a list of names into a nodelist,  removing ones that don't exist in the supergraph
             if len(parameters) > 1:
                 if Evaluator.checkAllTypes(paramtypes, ['Str']):
-                    return ["N",  Supergraph.verifyNodeNames(Evaluator.S,  parameters)]
+                    nodekeys = Supergraph.verifyNodeNames(Evaluator.S, parameters)
+                    return ["L",  [["N"]*len(nodekeys),nodekeys]]
                 return ["E",  "Unexpected parameters given"]
-            elif len(parameters) == 1:
-                if paramtypes[0] == 'Str':
-                    return ["N",  Supergraph.verifyNodeNames(Evaluator.S, parameters)]
-                if paramtypes[0] == '*':
-                    return ["N",  Supergraph.getNodeList(Evaluator.S)]
             else:
-                return ["N",  Supergraph.getNodeList(Evaluator.S)]
+                nodekeys = Supergraph.getAllNodeKeys(Evaluator.S)
+                return ["L", [["N"] * len(nodekeys), nodekeys]]
 
         if function in ["REMOVENODES"]:
             if len(parameters) > 1:
-                if Evaluator.checkAllTypes(paramtypes, ['Str']):
+                if Evaluator.checkAllTypes(paramtypes, ['Str','N']):
                     Evaluator.S.removeNodes(Supergraph.verifyNodeNames(Evaluator.S, parameters))
                     return ["V", ""]
                 return ["E", "Unexpected parameters given"]
@@ -836,18 +883,20 @@ class Evaluator:
                     Evaluator.S.removeNodes(Supergraph.verifyNodeNames(Evaluator.S, parameters))
                     return ["V", ""]
                 if paramtypes[0] == '*':
-                    Evaluator.S.removeNodes(Supergraph.getNodeList(Evaluator.S))
+                    Evaluator.S.removeNodes(Supergraph.getAllNodeKeys(Evaluator.S))
                     return ["V", ""]
             else:
                 return ["E", "Unexpected parameters given"]
 
         if function in ["ADDNODEDATA"]:
             if len(parameters) == 3:
-                # nodenames,  varname,  vardata
-                if (paramtypes[0:2] == ['N', 'Str']) and (paramtypes[2] in ['Str', 'Num']):
-                    # print Supergraph.verifyNodeNames(Evaluator.S, parameters[0])
-                    Supergraph.addNodeData(Evaluator.S, parameters[0], parameters[1], parameters[2], paramtypes[2])
-                    return ["V",  ""]
+                # nodenames(L),  varname,  vardata
+                if (paramtypes[0:2] == ['L', 'Str']) and (paramtypes[2] in ['Str', 'Num']):
+                    if Evaluator.checkAllTypes(parameters[0][0],["N"]):
+                        Supergraph.addNodeData(Evaluator.S, parameters[0][1], parameters[1], parameters[2], paramtypes[2])
+                        return ["V",  ""]
+                    else:
+                        return ["E", "Unexpected parameters given"]
                 else:
                     return ["E",  "Unexpected parameters given"]
             else:
@@ -856,23 +905,23 @@ class Evaluator:
         if function in ["REMOVENODEDATA"]:
             if len(parameters) == 3:
                 # nodenames,  varname
-                if (paramtypes[0:2] == ['N', 'Str']):
+                if (paramtypes[0:2] == ['L', 'Str']):
                     # print Supergraph.verifyNodeNames(Evaluator.S, parameters[0])
-                    Supergraph.removeNodeData(Evaluator.S, parameters[0], parameters[1])
-                    return ["V",  ""]
-                else:
-                    return ["E",  "Unexpected parameters given"]
+                    if Evaluator.checkAllTypes(parameters[0][0], ["N"]):
+                        Supergraph.removeNodeData(Evaluator.S, parameters[0], parameters[1])
+                        return ["V",  ""]
+                return ["E",  "Unexpected parameters given"]
             else:
                 return ["E",  "Unexpected parameters given"]
 
         if function in ["GETNODEDATA"]:
             if len(parameters) == 2:
-                # nodenames,  varname,  vardata
-                if paramtypes[0:2] == ['N', 'Str']:
-                    returnlist = Evaluator.S.getNodeData(parameters[0], parameters[1])
-                    return ["L",  returnlist]
-                else:
-                    return ["E",  "Unexpected parameters given"]
+                # nodenames,  varname
+                if paramtypes[0:2] == ['L', 'Str']:
+                    if Evaluator.checkAllTypes(parameters[0][0], ["N"]):
+                        returnlist = Evaluator.S.getNodeData(parameters[0][1], parameters[1])
+                        return ["L",  returnlist]
+                return ["E",  "Unexpected parameters given"]
             else:
                 return ["E",  "Unexpected parameters given"]
 
@@ -884,27 +933,42 @@ class Evaluator:
 
         if function == "ADDCONNECTIONS":
             if len(parameters) == 2:
-                if Evaluator.checkAllTypes(paramtypes,  ['N']):
-                    Evaluator.S.addConnections(parameters[0], parameters[1])
+                # ADDCONNECTIONS(leftnodes, rightnodes)
+                # Get initial left and right keys
+                # They're treated as lists even if they might be one item
+                lefttypes = [paramtypes[0]]
+                leftkeys = [parameters[0]]
+                righttypes = [paramtypes[1]]
+                rightkeys = [parameters[1]]
+
+                # if L type detected, unpack the list
+                if paramtypes[0] == 'L':
+                    lefttypes = parameters[0][0]
+                    leftkeys = parameters[0][1]
+                if paramtypes[1] == 'L':
+                    righttypes = parameters[1][0]
+                    rightkeys = parameters[1][1]
+
+                # check if all items are Nodes
+                if Evaluator.checkAllTypes(lefttypes+righttypes,  ['N']):
+                    Evaluator.S.addConnections(leftkeys, rightkeys)
                     return ["V", ""]
                 else:
                     return ["E",  "Unexpected parameters given"]
             else:
                 return ["E",  "Unexpected parameters given"]
 
+            
         if function in ["GETCONNECTIONS"]:
-            # converts a list of names into a nodelist,  removing ones that don't exist in the supergraph
+            # converts a list of names into a connectionlist,  removing ones that don't exist in the supergraph
             if len(parameters) > 1:
                 if Evaluator.checkAllTypes(paramtypes, ['Str']):
-                    return ["C", Supergraph.verifyConnectionNames(Evaluator.S, parameters)]
-                return ["E", "Unexpected parameters given"]
-            elif len(parameters) == 1:
-                if paramtypes[0] == 'Str':
-                    return ["C", Supergraph.verifyConnectionNames(Evaluator.S, parameters)]
-                if paramtypes[0] == '*':
-                    return ["C", Supergraph.getConnectionList(Evaluator.S)]
+                    connectionkeys = Supergraph.verifyConnectionNames(Evaluator.S, parameters)
+                    return ["L",  [["C"]*len(connectionkeys),connectionkeys]]
+                return ["E",  "Unexpected parameters given"]
             else:
-                return ["N", Supergraph.getConnectionList(Evaluator.S)]
+                connectionkeys = Supergraph.getAllConnectionKeys(Evaluator.S)
+                return ["L", [["C"] * len(connectionkeys), connectionkeys]]
 
         if function in ["REMOVECONNECTIONS"]:
             if len(parameters) > 1:
@@ -920,9 +984,47 @@ class Evaluator:
                     Evaluator.S.removeConnections(Supergraph.verifyConnectionNames(Evaluator.S,  parameters))
                     return ["V",  ""]
                 if paramtypes[0] == '*':
-                    Evaluator.S.removeConnections(Supergraph.getConnectionList(Evaluator.S))
+                    Evaluator.S.removeConnections(Supergraph.getAllConnectionKeys(Evaluator.S))
                     return ["V",  ""]
             else:
+                return ["E",  "Unexpected parameters given"]
+
+        if function in ["ADDCONNECTIONDATA"]:
+            if len(parameters) == 3:
+                # connectionnames(L),  varname,  vardata
+                if (paramtypes[0:2] == ['L', 'Str']) and (paramtypes[2] in ['Str', 'Num']):
+                    if Evaluator.checkAllTypes(parameters[0][0],["C"]):
+                        Supergraph.addConnectionData(Evaluator.S, parameters[0][1], parameters[1], parameters[2], paramtypes[2])
+                        return ["V",  ""]
+                    else:
+                        return ["E", "Unexpected parameters given"]
+                else:
+                    return ["E",  "Unexpected parameters given"]
+            else:
+                return ["E",  "Unexpected parameters given"]
+
+        if function in ["REMOVECONNECTIONDATA"]:
+            if len(parameters) == 3:
+                # connectionnames,  varname
+                if (paramtypes[0:2] == ['L', 'Str']):
+                    if Evaluator.checkAllTypes(parameters[0][0], ["C"]):
+                        # print Supergraph.verifyConnectionNames(Evaluator.S, parameters[0])
+                        Supergraph.removeConnectionData(Evaluator.S, parameters[0][1], parameters[1])
+                        return ["V",  ""]
+                return ["E",  "Unexpected parameters given"]
+            else:
+                return ["E",  "Unexpected parameters given"]
+
+        if function in ["GETCONNECTIONDATA"]:
+            if len(parameters) == 2:
+                # connectionnames,  varname
+                if paramtypes[0:2] == ['L', 'Str']:
+                    if Evaluator.checkAllTypes(parameters[0][0], ["C"]):
+                        returnlist = Evaluator.S.getConnectionData(parameters[0][1], parameters[1])
+                        return ["L",  returnlist]
+                return ["E",  "Unexpected parameters given"]
+            else:
+
                 return ["E",  "Unexpected parameters given"]
 
         if function in ["LISTGRAPHS"]:
@@ -930,52 +1032,53 @@ class Evaluator:
                 return ["E", "Unexpected parameters given"]
             Supergraph.printGraphList(Evaluator.S)
             return ["V", ""]
+
+        if function in ["ADDGRAPHS"]:
+            if Evaluator.checkAllTypes(paramtypes,["Str"]):
+                for param in parameters:
+                    Supergraph.addGraph(Evaluator.S, param)
+            else:
+                return ["E", "Unexpected parameters given"]
+            return ["V", ""]
         
         if function in ["GETGRAPHS"]:
-            # converts a list of names into a graph list,  removing ones that don't exist in the supergraph
+            # converts a list of names into a graphlist,  removing ones that don't exist in the supergraph
             if len(parameters) > 1:
                 if Evaluator.checkAllTypes(paramtypes, ['Str']):
-                    return ["N", Supergraph.verifyGraphNames(Evaluator.S, parameters)]
-                return ["E", "Unexpected parameters given"]
-            elif len(parameters) == 1:
-                if paramtypes[0] == 'Str':
-                    return ["G", Supergraph.verifyGraphNames(Evaluator.S, parameters)]
-                if paramtypes[0] == '*':
-                    return ["G", Supergraph.getGraphList(Evaluator.S)]
+                    graphkeys = Supergraph.verifyGraphNames(Evaluator.S, parameters)
+                    return ["L",  [["G"]*len(graphkeys),graphkeys]]
+                return ["E",  "Unexpected parameters given"]
             else:
-                return ["N", Supergraph.getGraphList(Evaluator.S)]
-            
+                graphkeys = Supergraph.getAllGraphKeys(Evaluator.S)
+                return ["L", [["G"] * len(graphkeys), graphkeys]]
+        
         if function in ["REMOVEGRAPHS"]:
-            if len(parameters) > 1:
-                if Evaluator.checkAllTypes(paramtypes, ['Str']):
+            if len(parameters) >= 1:
+                if Evaluator.checkAllTypes(paramtypes, ['Str','G']):
                     Evaluator.S.removeGraphs(Supergraph.verifyGraphNames(Evaluator.S,  parameters))
                     return ["V",  ""]
                 return ["E",  "Unexpected parameters given"]
-            elif len(parameters) == 1:
-                if paramtypes[0] == 'Str':
-                    Evaluator.S.removeGraphs(Supergraph.verifyGraphNames(Evaluator.S,  parameters))
-                    return ["V",  ""]
-                if paramtypes[0] == 'G':
-                    Evaluator.S.removeGraphs(Supergraph.verifyGraphNames(Evaluator.S,  parameters))
-                    return ["V",  ""]
-                if paramtypes[0] == '*':
-                    Evaluator.S.removeGraphs(Supergraph.getGraphList(Evaluator.S))
-                    return ["V",  ""]
             else:
-                return ["E",  "Unexpected parameters given"]
+                Evaluator.S.removeGraphs(Supergraph.getAllGraphKeys(Evaluator.S))
+                return ["V",  ""]
 
         if function in ["QUERY"]:
             # Run a query on a selected group of objects, only giving the ones where the expression returns true
             # Keyword THIS is used for this function to refer to object being currently queried
             if len(parameters) == 2:
-                # object list, query expression
-                if paramtypes[0] in ['N', 'C'] and paramtypes[1] == 'Str':
-                    returnlist = [[paramtypes[0]],[]] # Maintains list of keys that satisfied query
-                    for item in parameters[0]:
-                        result = Evaluator.evaluateExpression(parameters[1],item)
-                        if result == [[["Boolean"]],[["true"]]]:
-                            returnlist[1].append(item)
-                    return returnlist
+                # object list(L), query expression(Str)
+                if paramtypes[0] in ['L'] and paramtypes[1] == 'Str':
+                    if Evaluator.checkAllTypes(parameters[0][0], ['N','C']):
+                        returnlist = [[],[]] # Maintains list of keys that satisfied query
+                        # iterate through items in L
+                        for index in range(0,len(parameters[0][1])):
+                            item = parameters[0][1][index]
+                            type = parameters[0][0][index]
+                            result = Evaluator.evaluateExpression(parameters[1],item)
+                            if result == [[["Boolean"]],[["true"]]]:
+                                returnlist[0].append(type)
+                                returnlist[1].append(item)
+                        return ["L",returnlist]
                 else:
                     return ["E", "Unexpected parameters given"]
             else:
@@ -1097,14 +1200,14 @@ class Evaluator:
                 # Add new parameter to the list at the top of the stack
                 paramStack[-1].append(float(token))
                 paramType[-1].append(category)
-            elif category == "Boolean":
+            elif category in ["Boolean","*"]:
                 # Add new parameter to the list at the top of the stack
                 paramStack[-1].append(token)
                 paramType[-1].append(category)
-            elif category == "*":
+            elif category in ["V"]:
                 # Add new parameter to the list at the top of the stack
-                paramStack[-1].append(token)
-                paramType[-1].append(category)
+                paramStack[-1].append("")
+                paramType[-1].append("V")
             elif category == "?":
                 # Unknown category; search supergraph for data and inject it if possible
                 data = Evaluator.S.getData(token)
@@ -1119,7 +1222,8 @@ class Evaluator:
                         paramStack[-1].append(data[1][0])
                         paramType[-1].append(data[0][0])
                     else:
-                        return [["Boolean"], ["false"]]
+                        paramStack[-1].append("")
+                        paramType[-1].append("V")
                         #raise Exception("Unable to find value of "+token)
 
             # At end,  check if a binary operation is possible.
@@ -1137,10 +1241,14 @@ class Evaluator:
                             lefttype = paramType[-1].pop()
                             # Evaluate the binary operator
                             result = Evaluator.evaluateFunction(opStack[-1], [leftparam, rightparam], [lefttype, righttype])
-                            # Report error
+
+                            # # Report error
+                            # if result[0] == "E":
+                            #     print result
+                            #     raise Exception("ERROR " + result[1])
                             if result[0] == "E":
-                                print result
-                                raise Exception("ERROR " + result[1])
+                                return result
+
                             # put results in stacks
                             paramStack[-1].append(result[1])
                             paramType[-1].append(result[0])
@@ -1159,8 +1267,7 @@ class Evaluator:
                             result = Evaluator.evaluateFunction(opStack[-1], [0, rightparam], ["Num", righttype])
                             # Report error
                             if result[0] == "E":
-                                print result
-                                raise Exception("ERROR " + result[1])
+                                return result
                             # put results in stacks
                             paramStack[-1].append(result[1])
                             paramType[-1].append(result[0])
@@ -1322,8 +1429,9 @@ class Evaluator:
 
 # # # DRIVER CODE# # #
 import time # used for getting unix time
-import Queue
-import re   # regex library
+import Queue    # used for priority queues
+import re       # regex library
+import random   # used for random functions
 
 # somestr = "1+2+3-5+(3 - 2 + \"hello + world\" + '5'\) # == 5"
 # #print re.split('(\+|\-|\(|\)|==|")',somestr)
