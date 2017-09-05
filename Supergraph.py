@@ -52,6 +52,12 @@ class Supergraph:
                     return None
                 else:
                     return data
+            if reference in self.connectionlist.keys():
+                data = Supergraph.getConnectionData(self, [reference], pointers[1])
+                if len(data[0]) == 0:
+                    return None
+                else:
+                    return data
             # elif reference in self.connectionlist.keys():
             #     return Supergraph.getConnectionData(self, [reference], pointers[1])
             # elif reference in self.graphlist.keys():
@@ -259,6 +265,30 @@ class Supergraph:
         for connection in connections:
             Connection.removeConnectionData(connections[i],  varname)
 
+    def showAllConnections(self):
+        # prints all connections, and their left and right keys
+        for connect in self.connectionlist.values():
+            print connect.name, ": ",connect.leftkey,", ",connect.rightkey
+
+    def getNodeConnections(self,nodekeys=[],connectionkeys = []):
+        # gets all connection keys that belong to the given list of nodes
+        # Will restrain the search to a list of connections
+        # maintains direction of connections
+
+        returnlist = set() # is a set to restrict duplicate connections. Converted to list at end
+        connections = Supergraph.namesToConnections(self,connectionkeys)
+        for connect in connections:
+            leftkey = connect.leftkey
+            rightkey = connect.rightkey
+            direction = connect.direction
+            # check if an endpoint is in given node list, and destination lines up
+            if (leftkey in nodekeys) and (direction in ['right','both']):
+                returnlist.add(connect.name)
+            if (rightkey in nodekeys) and (direction in ['left','both']):
+                returnlist.add(connect.name)
+
+        return list(returnlist)
+
 class Graph:
     def __init__(self, supergraph, name, nodekeys, connectionkeys):
         self.supergraph = supergraph               # parent supergraph
@@ -299,9 +329,6 @@ class Node:
         self.nodedata = {}
         self.nodedatatype = {}
 
-    def getNodeName(self):
-        return self.name
-
     def addNodeData(self,  varname,  vardata,  vartype):
         if varname.lower() != "name":
             self.nodedata[varname] = vardata
@@ -329,15 +356,7 @@ class Connection:
         self.rightkey = rightkey    #  name of left node
         self.connectiondata = {}    # maintains additional information about the connection
         self.connectiondatatype = {}  # maintains additional information about the connection
-
-    def getConnectionName(self):
-        return self.name
-
-    def getLeftName(self):
-        return self.leftkey
-
-    def getRightName(self):
-        return self.rightkey
+        self.direction = 'both'     # The endpoint of the connection. Either left\right, or both for undirected.
 
     def addConnectionData(self,  varname,  vardata,  vartype):
         if varname.lower() != "name":
@@ -1449,6 +1468,14 @@ x = file.readlines()
 for i in x:
 #      # print Evaluator.tokenizeExpression(i.rstrip())
      Evaluator.evaluateExpression(i.rstrip())
+
+# n = Evaluator.S.nodelist.keys()[0:2]
+# c = Evaluator.S.connectionlist.keys()
+# print "nodes:",n
+# print "connections:",c
+# print Evaluator.S.getNodeConnections(n,c)
+# print Evaluator.S.showAllConnections()
+
 
 #                      __
 #         _______     /*_)-< HISS HISS
