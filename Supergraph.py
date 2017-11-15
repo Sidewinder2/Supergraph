@@ -1,33 +1,35 @@
-
 class Supergraph:
-    def __init__(self):
-        self.keylist = []          # list of keys. Prevents a connection, graph and a node having the same name
-        self.graphlist = {}        # dictionary maintaining a graph name to graph pointer conversion
-        self.nodelist = {}         # dictionary maintaining a node name to node pointer conversion
-        self.connectionlist = {}   # dictionary maintaining a connection name to connection pointer conversion
-        self.nodeconnectionlist = {}    # maintains a dictionary of nodes to lists of connections
+    keylist = []          # list of keys. Prevents a connection, graph and a node having the same name
+    graphlist = {}        # dictionary maintaining a graph name to graph pointer conversion
+    nodelist = {}         # dictionary maintaining a node name to node pointer conversion
+    connectionlist = {}   # dictionary maintaining a connection name to connection pointer conversion
+    nodeconnectionlist = {}    # maintains a dictionary of nodes to lists of connections
 
-        self.supergraphdata = {}   # dictionary maintaining a variable name to variable data conversion
-        self.supergraphdatatype = {}   # maintains the typing of all data stored in datalist
+    supergraphdata = {}   # dictionary maintaining a variable name to variable data conversion
+    supergraphdatatype = {}   # maintains the typing of all data stored in datalist
 
-        self.connectionidprefix = "Connection"
-        self.connectionidsuffix = 0   # ID counter for naming connections automatically
+    connectionidprefix = "Connection"
+    connectionidsuffix = 0   # ID counter for naming connections automatically
 
+    @staticmethod
     def getNodeConnectionList(self):
-        return self.nodeconnectionlist
+        return Supergraph.nodeconnectionlist
 
-    def getKeyList(self):
-        return self.keylist
+    @staticmethod
+    def getKeyList():
+        return Supergraph.keylist
 
-    def verifyKeys(self, keylist):
+    @staticmethod
+    def verifyKeys(keylist):
         # Will remove any names from list that don't point to anything
         returnlist = []
         for key in keylist:
-            if key in self.keylist:
+            if key in Supergraph.keylist:
                 returnlist.append(key)  # add valid name to list
         return returnlist
 
-    def getPointerData(self, pointers = [], this = ""):
+    @staticmethod
+    def getPointerData(pointers = [], this = ""):
         # Pulls data from supergraph when given a pointer such as NODE.DATA
         if len(pointers) == 1:
             if pointers[0] == "THIS":
@@ -37,11 +39,11 @@ class Supergraph:
             else:
                 reference = pointers[0]
             
-            if reference in self.nodelist.keys():
+            if reference in Supergraph.nodelist.keys():
                 return [["N"],reference]
-            elif reference in self.connectionlist.keys():
+            elif reference in Supergraph.connectionlist.keys():
                 return [["C"], reference]
-            elif reference in self.graphlist.keys():
+            elif reference in Supergraph.graphlist.keys():
                 return [["G"], reference]
         elif len(pointers) == 2:
             if pointers[0] == "THIS":
@@ -50,128 +52,151 @@ class Supergraph:
                 reference = this
             else:
                 reference = pointers[0]
-            if reference in self.nodelist.keys():
-                data = Supergraph.getNodeData(self, [reference], pointers[1])
+            if reference in Supergraph.nodelist.keys():
+                data = Supergraph.getNodeData([reference], pointers[1])
                 if len(data[0]) == 0:
                     return None
                 else:
                     return data
-            if reference in self.connectionlist.keys():
-                data = Supergraph.getConnectionData(self, [reference], pointers[1])
+            if reference in Supergraph.connectionlist.keys():
+                data = Supergraph.getConnectionData([reference], pointers[1])
                 if len(data[0]) == 0:
                     return None
                 else:
                     return data
-            # elif reference in self.connectionlist.keys():
-            #     return Supergraph.getConnectionData(self, [reference], pointers[1])
-            # elif reference in self.graphlist.keys():
-            #     return Supergraph.getGraphData(self, [reference], pointers[1])
+            # elif reference in Supergraph.connectionlist.keys():
+            #     return Supergraph.getConnectionData([reference], pointers[1])
+            # elif reference in Supergraph.graphlist.keys():
+            #     return Supergraph.getGraphData([reference], pointers[1])
         return None
 
-    def addData(self,  varname,  vardata,  vartype):
-        if (varname not in self.supergraphdata) and varname != "name":
-            self.supergraphdata[varname] = vardata
-            self.supergraphdatatype[varname] = vartype
+    @staticmethod
+    def addData( varname,  vardata,  vartype):
+        if (varname not in Supergraph.supergraphdata) and varname != "name":
+            Supergraph.supergraphdata[varname] = vardata
+            Supergraph.supergraphdatatype[varname] = vartype
 
-    def getData(self,  varname):
+    @staticmethod
+    def getData( varname):
         # gets type and value of requested variable,  none if it doesn't exist
-        if varname in self.supergraphdata:
-            # print "RETURNING " + self.name + ": "+str([self.nodedatatype[varname], self.nodedata[varname]])
-            return [self.supergraphdatatype[varname], self.supergraphdata[varname]]
+        if varname in Supergraph.supergraphdata:
+            # print "RETURNING " + Supergraph.name + ": "+str([Supergraph.nodedatatype[varname], Supergraph.nodedata[varname]])
+            return [Supergraph.supergraphdatatype[varname], Supergraph.supergraphdata[varname]]
         return None
 
-    def removeData(self,  varname):
-        if varname in self.supergraphdata:
-            del self.supergraphdata[varname]
-            del self.supergraphdatatype[varname]
+    @staticmethod
+    def removeData( varname):
+        if varname in Supergraph.supergraphdata:
+            del Supergraph.supergraphdata[varname]
+            del Supergraph.supergraphdatatype[varname]
 
-    def addGraph(self,  graphname,  nodekeys = [],  connectionkeys = []):
+    @staticmethod
+    def addGraph( graphname,  nodekeys = [],  connectionkeys = []):
         # Adds a graph to the database
-        if (graphname not in self.graphlist and graphname not in self.keylist):
-            self.graphlist[graphname] = Graph(self,  graphname,  nodekeys,  connectionkeys)
-            self.keylist.append(graphname)
+        if graphname not in Supergraph.graphlist and graphname not in Supergraph.keylist:
+            Supergraph.graphlist[graphname] = Graph( graphname,  nodekeys,  connectionkeys)
+            Supergraph.keylist.append(graphname)
 
-    def removeGraphs(self,  graphnames):
-        verifiedgraphs = self.verifyGraphNames(graphnames)     # get list of graphs from keys
+    @staticmethod
+    def removeGraphs( graphnames):
+        verifiedgraphs = Supergraph.verifyGraphNames(graphnames)     # get list of graphs from keys
         for graphname in verifiedgraphs:
-            del self.graphlist[graphname]
-            self.keylist.remove(graphname)
+            del Supergraph.graphlist[graphname]
+            Supergraph.keylist.remove(graphname)
 
+    @staticmethod
     def getAllGraphKeys(self):
         #  Lists names of all existing graphs
-        return self.graphlist.keys()
+        return Supergraph.graphlist.keys()
 
+    @staticmethod
     def printGraphList(self):
         #  Lists names of all existing graphs
-        print self.graphlist.keys()
-        
-    def verifyGraphNames(self,  graphnames = []):
+        print Supergraph.graphlist.keys()
+
+    @staticmethod
+    def verifyGraphNames( graphnames = []):
         # Will remove any names from list that don't point to anything
         returnlist = []
         for name in graphnames:
-            if name in self.graphlist.keys():
+            if name in Supergraph.graphlist.keys():
                 returnlist.append(name) # add valid name to list
         return returnlist
 
-    def namesToGraphs(self,  graphnames = []):
+    @staticmethod
+    def namesToGraphs( graphnames = []):
         # Converts a list of a keys to graph pointers
         returnlist = []
         for i in graphnames:
-            if (graphnames[i] in self.graphlist):
-                returnlist.append(self.graphlist[graphnames[i]])
+            if graphnames[i] in Supergraph.graphlist:
+                returnlist.append(Supergraph.graphlist[graphnames[i]])
         return returnlist
 
-    def addNode(self,  nodename):
-        #  Adds a node to the database
-        if (nodename not in self.nodelist and nodename not in self.keylist):
-            self.nodelist[nodename] = Node(self, nodename)
-            self.nodeconnectionlist[nodename] = set()
-            self.keylist.append(nodename)
+    @staticmethod
+    def addNode(nodename, nodedata = {}):
+        assert type(nodename) is str
+        assert type(nodedata) is dict
 
-    def removeNodes(self,  nodenames):
+        #  Adds a node to the database. Returns True if successful
+        if nodename not in Supergraph.nodelist and nodename not in Supergraph.keylist:
+            Supergraph.nodelist[nodename] = Node(nodename)
+            Supergraph.nodeconnectionlist[nodename] = set()
+            Supergraph.keylist.append(nodename)
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def removeNodes( nodenames):
         # Removes a list of nodes from the database
-        verifiednodes = self.verifyNodeNames(nodenames)     # get list of nodes from keys
+        verifiednodes = Supergraph.verifyNodeNames(nodenames)     # get list of nodes from keys
         for nodename in verifiednodes:
-            del self.nodelist[nodename]
-            del self.nodeconnectionlist[nodename]
-            self.keylist.remove(nodename)
+            del Supergraph.nodelist[nodename]
+            del Supergraph.nodeconnectionlist[nodename]
+            Supergraph.keylist.remove(nodename)
 
-    def getAllNodeKeys(self):
+    @staticmethod
+    def getAllNodeKeys():
         # lists the node keys
-        return self.nodelist.keys()
+        return Supergraph.nodelist.keys()
 
+    @staticmethod
     def printNodeList(self):
         # lists the node keys
-        print self.nodelist.keys()
+        print Supergraph.nodelist.keys()
 
-    def verifyNodeNames(self,  nodenames = []):
+    @staticmethod
+    def verifyNodeNames( nodenames = []):
         # Will remove any names from list that don't point to anything
         returnlist = []
         for name in nodenames:
-            if name in self.nodelist.keys():
+            if name in Supergraph.nodelist.keys():
                 returnlist.append(name) # add valid name to list
         return returnlist
 
-    def namesToNodes(self,  nodenames = []):
+    @staticmethod
+    def namesToNodes( nodenames = []):
         # Converts a list of a keys to node pointers
         #  Will remove any names from list that don't point to anything
         returnlist = []
-        names = Supergraph.verifyNodeNames(self, nodenames)
+        names = Supergraph.verifyNodeNames(nodenames)
         for i in names:
-            returnlist.append(self.nodelist[i]) # get pointer from node list
+            returnlist.append(Supergraph.nodelist[i]) # get pointer from node list
         return returnlist
 
-    def addNodeData(self,  nodenames,  varname,  vardata,  vartype):
+    @staticmethod
+    def addNodeData( nodenames,  varname,  vardata,  vartype):
         #  Adds data to a list of nodes
-        nodes = self.namesToNodes(nodenames)  #  get list of nodes from keys
+        nodes = Supergraph.namesToNodes(nodenames)  #  get list of nodes from keys
         for i in nodes:
             Node.addNodeData(i,  varname,  vardata,  vartype)
 
-    def getNodeData(self,  nodenames,  varname):
+    @staticmethod
+    def getNodeData( nodenames,  varname):
         # Gets requested variable from a list of nodes.
         # Returns a list of 2 lists, the first containing data types and the second containing the values
         # Won't append data if it doesn't exist for that node
-        nodes = self.namesToNodes(nodenames)  #  get list of nodes from keys
+        nodes = Supergraph.namesToNodes(nodenames)  #  get list of nodes from keys
         returnlist = [[], []]
         for i in nodes:
             typevalue = Node.getNodeData(i,  varname)   # get the array containing the type and value of the data
@@ -182,92 +207,115 @@ class Supergraph:
                 returnlist[1].append(value)
         return returnlist
 
-    def removeNodeData(self,  nodenames,  varname):
+    @staticmethod
+    def removeNodeData( nodenames,  varname):
         #  Removes data from a list of nodes
-        nodes = self.namesToNodes(nodenames)  #  get list of nodes from keys
+        nodes = Supergraph.namesToNodes(nodenames)  #  get list of nodes from keys
         for node in nodes:
             Node.removeNodeData(nodes[i],  varname)
-            
-    def addConnection(self,  connectionname,  leftname,  rightname):
-        # Adds a connection to the database
-        assert leftname in self.nodelist.keys(), 'Node '+leftname+" not found"
-        assert rightname in self.nodelist.keys(), 'Node ' + rightname + " not found"
-        if (connectionname not in self.connectionlist):
-            self.connectionlist[connectionname] = Connection(self, connectionname, leftname,  rightname)
-            self.nodeconnectionlist[leftname].add(connectionname)
-            self.nodeconnectionlist[rightname].add(connectionname)
-            self.keylist.append(connectionname)
 
-    def addConnections(self,  leftnames,  rightnames):
+    @staticmethod
+    def addConnection( connectionname,  leftname,  rightname):
+        # creates a connection in the database. Returns true if successful, false if not
+
+        assert type(connectionname) is str
+        assert type(leftname) is str
+        assert type(rightname) is str
+
+        # Check if left and right keys in database, otherwise it fails
+        if leftname not in Supergraph.nodelist.keys():
+            return False
+        if rightname not in Supergraph.nodelist.keys():
+            return False
+
+        if connectionname not in Supergraph.connectionlist:
+            Supergraph.connectionlist[connectionname] = Connection(connectionname, leftname,  rightname)
+            Supergraph.nodeconnectionlist[leftname].add(connectionname)
+            Supergraph.nodeconnectionlist[rightname].add(connectionname)
+            Supergraph.keylist.append(connectionname)
+            return True
+        return False
+
+    @staticmethod
+    def addConnections( leftnames,  rightnames):
         # Adds connections to the database
         # Will connect every node from left side to right side,  resulting in L * R connections
-        verifiedleftnames = self.verifyNodeNames(leftnames)
-        verifiedrightnames = self.verifyNodeNames(rightnames)
+        verifiedleftnames = Supergraph.verifyNodeNames(leftnames)
+        verifiedrightnames = Supergraph.verifyNodeNames(rightnames)
         for left in verifiedleftnames:
             for right in verifiedrightnames:
-                connectionname = self.getNextConnectionName()
-                self.addConnection(connectionname, left, right)
+                connectionname = Supergraph.getNextConnectionName()
+                Supergraph.addConnection(connectionname, left, right)
 
-
-    def removeConnections(self,  connectionnames):
+    @staticmethod
+    def removeConnections(connectionnames):
         # removes the specified connections,  if they exist
         for connectionkey in connectionnames:
-            if (connectionkey in self.connectionlist.keys()):
+            if connectionkey in Supergraph.connectionlist.keys():
                 # remove left and right references
-                c = self.connectionlist[connectionkey]
-                if connectionkey in self.nodeconnectionlist[c.leftkey]:
-                    self.nodeconnectionlist[c.leftkey].remove(connectionkey)
-                if connectionkey in self.nodeconnectionlist[c.rightkey]:
-                    self.nodeconnectionlist[c.rightkey].remove(connectionkey)
+                c = Supergraph.connectionlist[connectionkey]
+                if c.leftkey in Supergraph.nodeconnectionlist:
+                    if connectionkey in Supergraph.nodeconnectionlist[c.leftkey]:
+                        Supergraph.nodeconnectionlist[c.leftkey].remove(connectionkey)
+                if c.rightkey in Supergraph.nodeconnectionlist:
+                    if connectionkey in Supergraph.nodeconnectionlist[c.rightkey]:
+                        Supergraph.nodeconnectionlist[c.rightkey].remove(connectionkey)
                 # remove connection
-                del self.connectionlist[connectionkey]
-                self.keylist.remove(connectionkey)
+                del Supergraph.connectionlist[connectionkey]
+                Supergraph.keylist.remove(connectionkey)
 
-    def getAllConnectionKeys(self):
+    @staticmethod
+    def getAllConnectionKeys():
         # lists the node keys
-        return self.connectionlist.keys()
+        return Supergraph.connectionlist.keys()
 
-    def printConnectionList(self):
+    @staticmethod
+    def printConnectionList():
         # lists the node keys
-        print self.connectionlist.keys()
-        
-    def getNextConnectionName(self):
+        print Supergraph.connectionlist.keys()
+
+    @staticmethod
+    def getNextConnectionName():
         # Used for automatically naming connections
         # Will update id counter to make it as up to date as possible
-        connectname = self.connectionidprefix + str(self.connectionidsuffix)
-        while (connectname in self.connectionlist) or (connectname in self.keylist):
-            self.connectionidsuffix += 1
-            connectname = self.connectionidprefix + str(self.connectionidsuffix)
+        connectname = Supergraph.connectionidprefix + str(Supergraph.connectionidsuffix)
+        while (connectname in Supergraph.connectionlist) or (connectname in Supergraph.keylist):
+            Supergraph.connectionidsuffix += 1
+            connectname = Supergraph.connectionidprefix + str(Supergraph.connectionidsuffix)
         return connectname
 
-    def verifyConnectionNames(self,  connectionnames = []):
+    @staticmethod
+    def verifyConnectionNames( connectionnames = []):
         # Will remove any names from list that don't point to anything
         returnlist = []
         for name in connectionnames:
-            if name in self.connectionlist.keys():
+            if name in Supergraph.connectionlist.keys():
                 returnlist.append(name) #append valid name to list
         return returnlist
 
-    def namesToConnections(self,  connectionnames = []):
+    @staticmethod
+    def namesToConnections( connectionnames = []):
         # Converts a list of a keys to connection pointers
         #  Will remove any names from list that don't point to anything
         returnlist = []
-        verifiednames = Supergraph.verifyConnectionNames(self, connectionnames)
+        verifiednames = Supergraph.verifyConnectionNames(connectionnames)
         for name in verifiednames:
-            returnlist.append(self.connectionlist[name]) # get pointer from node list
+            returnlist.append(Supergraph.connectionlist[name]) # get pointer from node list
         return returnlist
-    
-    def addConnectionData(self,  connectionnames,  varname,  vardata,  vartype):
+
+    @staticmethod
+    def addConnectionData( connectionnames,  varname,  vardata,  vartype):
         #  Adds data to a list of connections
-        connections = self.namesToConnections(connectionnames)  #  get list of connections from keys
+        connections = Supergraph.namesToConnections(connectionnames)  #  get list of connections from keys
         for i in connections:
             Connection.addConnectionData(i,  varname,  vardata,  vartype)
 
-    def getConnectionData(self,  connectionnames,  varname):
+    @staticmethod
+    def getConnectionData( connectionnames,  varname):
         # Gets requested variable from a list of connections.
         # Returns a list of 2 lists, the first containing data types and the second containing the values
         # Won't append data if it doesn't exist for that connection
-        connections = self.namesToConnections(connectionnames)  #  get list of connections from keys
+        connections = Supergraph.namesToConnections(connectionnames)  #  get list of connections from keys
         returnlist = [[], []]
         for i in connections:
             typevalue = Connection.getConnectionData(i,  varname)   # get the array containing the type and value of the data
@@ -278,24 +326,27 @@ class Supergraph:
                 returnlist[1].append(value)
         return returnlist
 
-    def removeConnectionData(self,  connectionnames,  varname):
+    @staticmethod
+    def removeConnectionData( connectionnames,  varname):
         #  Removes data from a list of connections
-        connections = self.namesToConnections(connectionnames)  #  get list of connections from keys
+        connections = Supergraph.namesToConnections(connectionnames)  #  get list of connections from keys
         for connection in connections:
             Connection.removeConnectionData(connections[i],  varname)
 
-    def showAllConnections(self):
+    @staticmethod
+    def showAllConnections():
         # prints all connections, and their left and right keys
-        for connect in self.connectionlist.values():
+        for connect in Supergraph.connectionlist.values():
             print connect.name, ": ",connect.leftkey,", ",connect.rightkey
 
-    def getNodeConnections(self,nodekeys=[],connectionkeys = []):
+    @staticmethod
+    def getNodeConnections(nodekeys=[],connectionkeys = []):
         # gets all connection keys that belong to the given list of nodes
         # Will restrain the search to a list of connections
         # maintains direction of connections
 
         returnlist = set() # is a set to restrict duplicate connections. Converted to list at end
-        connections = Supergraph.namesToConnections(self,connectionkeys)
+        connections = Supergraph.namesToConnections(connectionkeys)
         for connect in connections:
             leftkey = connect.leftkey
             rightkey = connect.rightkey
@@ -309,8 +360,7 @@ class Supergraph:
         return list(returnlist)
 
 class Graph:
-    def __init__(self, supergraph, name, nodekeys, connectionkeys):
-        self.supergraph = supergraph               # parent supergraph
+    def __init__(self, name, nodekeys, connectionkeys):
         self.name = name                           # name uniquely identifying the graph
         self.nodekeys = nodekeys                   # list of node keys used in this graph
         self.connectionkeys = connectionkeys       # list of connection keys used in this graph
@@ -342,8 +392,7 @@ class Graph:
                 self.nodekeys.remove(node)
 
 class Node:
-    def __init__(self, supergraph, name):
-        self.supergraph = supergraph
+    def __init__(self, name):
         self.name = name
         self.nodedata = {}
         self.nodedatatype = {}
@@ -368,9 +417,8 @@ class Node:
             del self.nodedatatype[varname]
 
 class Connection:
-    def __init__(self, supergraph, name, leftkey, rightkey):
+    def __init__(self, name, leftkey, rightkey):
         self.name = name   # unique name of the connection used as a key
-        self.supergraph = supergraph;
         self.leftkey = leftkey     # name of left node
         self.rightkey = rightkey    #  name of left node
         self.connectiondata = {}    # maintains additional information about the connection
@@ -385,7 +433,6 @@ class Connection:
     def getConnectionData(self,  varname):
         # gets type and value of requested variable,  none if it doesn't exist
         if varname in self.connectiondata:
-            # print "RETURNING " + self.name + ": "+str([self.nodedatatype[varname], self.nodedata[varname]])
             return [self.connectiondatatype[varname], self.connectiondata[varname]]
         if varname.lower() == "leftname":
             return ["Str", self.leftkey]
@@ -399,6 +446,23 @@ class Connection:
         if varname in self.connectiondata:
             del self.connectiondata[varname]
             del self.connectiondatatype[varname]
+
+class ArtPointsFinder:
+    # Todo: Implement ArtPointsFinder
+
+    def __init__(self):
+        self.visited = set()        # maintains list of previously visited nodes
+        self.node_to_parent = {}    # maintains parent heirarchy in DFS
+        self.node_to_index = {}     # maintains index of given node
+        self.node_to_low = {}       # maintains low value of given node
+
+    def getArtPoints(self,nodes = [], connections = []):
+        # Returns articulated points, given a list of node and connection keys
+        self.visited.clear()
+        self.node_to_parent.clear()
+        self.node_to_index.clear()
+        self.node_to_low.clear()
+
 
 class Evaluator:
     S = Supergraph()
@@ -421,6 +485,8 @@ class Evaluator:
                       'ADDCONNECTIONDATA', 'GETCONNECTIONDATA', 'REMOVECONNECTIONDATA',
                       'LISTGRAPHS', 'ADDGRAPHS', 'GETGRAPHS', 'REMOVEGRAPHS',
                       'QUERY']
+    operators = ['-', '+', '/', '*', '%', '==', '!=', '>', '<', '>=', '<=', '||', '&&']
+    reserved_chars = ['(', ')', '#', '"', "'", '\\', '\t', ',']   # these characters cannot be used in an object name
 
 
     @staticmethod
@@ -457,7 +523,7 @@ class Evaluator:
 
     @staticmethod
     def checkParenCount(expression):
-        if(expression.count('(') == expression.count(')')):
+        if expression.count('(') == expression.count(')'):
             return True
         return False
 
@@ -484,7 +550,6 @@ class Evaluator:
 
     @staticmethod
     def categorizeToken(token):
-        operators = ['-',  '+',  '/', '*', '%','==','!=','>','<','>=','<=','||','&&']
         quote_chars = ["'", '"']
         bools = ['true','false']
         null = ["null"]
@@ -497,7 +562,7 @@ class Evaluator:
             return ','
         elif token in Evaluator.function_names:
             return 'Fun'
-        elif token in operators:
+        elif token in Evaluator.operators:
             return 'Op'
         elif token.lower() in null:
             return 'V'
@@ -530,7 +595,7 @@ class Evaluator:
         # Returns ["E", "errormessage] in the event of failure
 
         if "E" in paramtypes:
-            return ["E",  "General Failure"]
+            raise Exception("General Failure")
 
         if function == "PRINT":
             # Basic print; will unpack values if only 1 is given
@@ -542,7 +607,7 @@ class Evaluator:
 
         if function == "PRINTKEYS":
             # Prints all existing keys in the supergraph
-            print Evaluator.S.getKeyList()
+            print Supergraph.getKeyList()
             return ["V",  ""]
 
         if function == "GETTIME":
@@ -550,7 +615,7 @@ class Evaluator:
             if len(parameters) == 0:
                 return ["Num", time.time()]
             else:
-                return ["E", "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
 
         if function in ["+", "SUM"]:
             # General sumation function.
@@ -572,7 +637,7 @@ class Evaluator:
                 # Add numbers and concat strings. A mix will produce a string
                 for type in paramtypes:
                     if type not in ["Str", "Num"]:
-                        return ["E",  "Input of type "+type+" cannot be summed"]
+                        raise Exception("Input of type "+type+" cannot be summed")
                     if type != "Num":
                         result = ""
                         for param in parameters:
@@ -582,70 +647,72 @@ class Evaluator:
                 for param in parameters:
                     result += float(param)
                 return ["Num",  result]
+            else:
+                raise Exception("Unexpected parameters given")
 
         if function in ["-", "SUBTRACT"]:
             if len(parameters) == 2:
                 if Evaluator.checkAllTypes(paramtypes,  ['Num']):
                     return ["Num",  float(parameters[0]) - float(parameters[1])]
                 else:
-                    return ["E",  "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E",  "2 Parameters expected"]
+                raise Exception("2 Parameters expected")
 
-        if (function in ["*", "MULTIPLY"]):
+        if function in ["*", "MULTIPLY"]:
             if len(parameters) == 2:
                 if Evaluator.checkAllTypes(paramtypes, ['Num']):
                     return ["Num", float(parameters[0]) * float(parameters[1])]
                 else:
-                    return ["E", "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E", "2 Parameters expected"]
+                raise Exception("2 Parameters expected")
 
-        if (function in ["/", "DIVIDE"]):
+        if function in ["/", "DIVIDE"]:
             if len(parameters) == 2:
                 if Evaluator.checkAllTypes(paramtypes,  ['Num']):
                     return ["Num",  float(parameters[0]) / float(parameters[1])]
                 else:
-                    return ["E",  "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E",  "2 Parameters expected"]
+                raise Exception("2 Parameters expected")
 
         if function in ["%", "MOD"]:
             if len(parameters) == 2:
                 if Evaluator.checkAllTypes(paramtypes,  ['Num']):
                     return ["Num",  float(parameters[0]) % float(parameters[1])]
                 else:
-                    return ["E",  "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E",  "2 Parameters expected"]
+                raise Exception("2 Parameters expected")
 
-        if (function in ["ABS"]):
+        if function in ["ABS"]:
             if len(parameters) == 1:
                 if Evaluator.checkAllTypes(paramtypes,  ['Num']):
                     return ["Num",  abs(float(parameters[0]))]
                 else:
-                    return ["E",  "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E",  "1 Parameter expected"]
+                raise Exception("1 Parameter expected")
 
-        if (function in ["SQRT"]):
+        if function in ["SQRT"]:
             if len(parameters) == 1:
                 if Evaluator.checkAllTypes(paramtypes,  ['Num']):
                     result = parameters[0] ** (1.0 / 2) #raise the power of parameter to 1/2, giving square root
                     return ["Num",  result]
                 else:
-                    return ["E",  "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E",  "1 Parameter expected"]
+                raise Exception("1 Parameter expected")
 
         if function == "SIZE":
             if len(parameters) == 1:
                 if paramtypes[0] in ["L","Str"]:
                     return ["Num", len(parameters[0])]
                 else:
-                    return ["E", "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E", "Too many parameters given"]
+                raise Exception("Too many parameters given")
 
         if function == "NOT":
             if len(parameters) == 1:
@@ -655,9 +722,9 @@ class Evaluator:
                     else:
                         return ["Boolean", 'true']
                 else:
-                    return ["E", "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E", "Too many parameters given"]
+                raise Exception("Too many parameters given")
 
         if function in ["&&","AND"]:
             if len(parameters) >= 2:
@@ -667,9 +734,9 @@ class Evaluator:
                             return ["Boolean", 'false']
                     return ["Boolean", 'true']
                 else:
-                    return ["E",  "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E",  "2 or more parameters expected"]
+                raise Exception("2 or more parameters expected")
 
         if function in ["||","OR"]:
             if len(parameters) >= 2:
@@ -679,9 +746,9 @@ class Evaluator:
                             return ["Boolean", 'true']
                     return ["Boolean", 'false']
                 else:
-                    return ["E",  "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E",  "2 or more parameters expected"]
+                raise Exception("2 or more parameters expected")
 
         if function == "XOR":
             if len(parameters) >= 2:
@@ -694,9 +761,9 @@ class Evaluator:
                         return ["Boolean", 'true']
                     return ["Boolean", 'false']
                 else:
-                    return ["E",  "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E",  "2 or more parameters expected"]
+                raise Exception("2 or more parameters expected")
 
         if function == "XNOR":
             if len(parameters) >= 2:
@@ -709,9 +776,9 @@ class Evaluator:
                         return ["Boolean", 'true']
                     return ["Boolean", 'false']
                 else:
-                    return ["E",  "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E",  "2 or more parameters expected"]
+                raise Exception("2 or more parameters expected")
 
         if function in ["==","EQ"]:
             # Equals function
@@ -722,9 +789,9 @@ class Evaluator:
                             return ["Boolean", 'false']
                     return ["Boolean", 'true']
                 else:
-                    return ["E",  "Cannot compare lists"]
+                    raise Exception("Cannot compare lists")
             else:
-                return ["E",  "2 or more parameters expected"]
+                raise Exception("2 or more parameters expected")
 
         if function in ["!=","NEQ"]:
             # Not Equals function. All items must by unique values to return true
@@ -737,9 +804,9 @@ class Evaluator:
                         itemset.append(param)
                     return ["Boolean", 'true']
                 else:
-                    return ["E",  "Cannot compare lists"]
+                    raise Exception("Cannot compare lists")
             else:
-                return ["E",  "2 or more parameters expected"]
+                raise Exception("2 or more parameters expected")
 
         if function in [">=","GTEQ"]:
             # Greater than. Will return false if items are not sorted in descending order
@@ -750,9 +817,9 @@ class Evaluator:
                             return ["Boolean", 'false']
                     return ["Boolean", 'true']
                 else:
-                    return ["E",  "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E",  "2 or more parameters expected"]
+                raise Exception("2 or more parameters expected")
 
         if function in ["<=","LTEQ"]:
             # Greater than. Will return false if items are not sorted in descending order
@@ -763,9 +830,9 @@ class Evaluator:
                             return ["Boolean", 'false']
                     return ["Boolean", 'true']
                 else:
-                    return ["E",  "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E",  "2 or more parameters expected"]
+                raise Exception("2 or more parameters expected")
 
         if function in [">","GT"]:
             # Greater than. Will return false if items are not sorted in descending order
@@ -776,9 +843,9 @@ class Evaluator:
                             return ["Boolean", 'false']
                     return ["Boolean", 'true']
                 else:
-                    return ["E",  "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E",  "2 or more parameters expected"]
+                raise Exception("2 or more parameters expected")
 
         if function in ["<","LT"]:
             # Greater than. Will return false if items are not sorted in descending order
@@ -789,9 +856,9 @@ class Evaluator:
                             return ["Boolean", 'false']
                     return ["Boolean", 'true']
                 else:
-                    return ["E",  "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E",  "2 or more parameters expected"]
+                raise Exception("2 or more parameters expected")
 
         if function in ["SORT"]:
             # Returns a sorted list
@@ -811,16 +878,16 @@ class Evaluator:
                 typeslist = (['Num']*len(numlist)) + (['Str']*len(strlist))
                 return ['L', [typeslist, sortedlist]]
             else:
-                return ["E",  "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
 
-        if (function in ["LEVEN"]):
+        if function in ["LEVEN"]:
             if len(parameters) == 2:
                 if Evaluator.checkAllTypes(paramtypes,  ['Str']):
                     return ["Num",  Evaluator.levenshtein(parameters[0],parameters[1])]
                 else:
-                    return ["E",  "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E",  "2 Parameters expected"]
+                raise Exception("2 Parameters Expected")
 
         if function in ["AVG"]:
             if Evaluator.checkAllTypes(paramtypes,  ['Num']):
@@ -832,9 +899,9 @@ class Evaluator:
                     result = sum / len(parameters)
                     return ["Num",  result]
                 else:
-                    return ["E",  "At least one parameter must be supplied"]
+                    raise Exception("At least one parameter must be supplied")
             else:
-                return ["E",  "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
 
         if function in ["RANDOM"]:
             # Returns random float between 0 and x, or in range if two numbers given
@@ -843,9 +910,9 @@ class Evaluator:
                         return ["Num", random.uniform(parameters[0],parameters[1])]
                 if len(parameters) == 1:
                         return ["Num", random.uniform(0,parameters[0])]
-                return ["E", "1 or 2 numbers expected"]
+                raise Exception("1 or 2 numbers expected")
             else:
-                return ["E", "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
 
         if function in ["RANDOMINT"]:
             # Returns random int between 0 and x, or in range if two numbers given
@@ -854,55 +921,55 @@ class Evaluator:
                         return ["Num", int(random.uniform(parameters[0],parameters[1]))]
                 if len(parameters) == 1:
                         return ["Num", int(random.uniform(0,parameters[0]))]
-                return ["E", "1 or 2 numbers expected"]
+                raise Exception("1 or 2 numbers expected")
             else:
-                return ["E", "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
 
         if function in ["ADDDATA"]:
             if len(parameters) == 2:
                 #  varname,  vardata
-                if (paramtypes[0] == 'Str'):
-                    # print Supergraph.verifyNodeNames(Evaluator.S, parameters[0])
-                    Supergraph.addData(Evaluator.S, parameters[0], parameters[1], paramtypes[1])
+                if paramtypes[0] == 'Str':
+                    # print Supergraph.verifyNodeNames(parameters[0])
+                    Supergraph.addData(parameters[0], parameters[1], paramtypes[1])
                     return ["V",  ""]
                 else:
-                    return ["E",  "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E",  "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
 
         if function in ["REMOVEDATA"]:
             if len(parameters) == 1:
                 #  varname,  vardata
-                if (paramtypes[0] == 'Str'):
-                    # print Supergraph.verifyNodeNames(Evaluator.S, parameters[0])
-                    Supergraph.removeData(Evaluator.S, parameters[0])
+                if paramtypes[0] == 'Str':
+                    # print Supergraph.verifyNodeNames(parameters[0])
+                    Supergraph.removeData(parameters[0])
                     return ["V",  ""]
                 else:
-                    return ["E",  "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E",  "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
 
         if function in ["LISTNODES"]:
             if len(parameters) > 0:
-                return ["E",  "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
             Supergraph.printNodeList(Evaluator.S)
             return ["V",  ""]
 
         if function in ["ADDNODES"]:
             for type in paramtypes:
                 if type not in ["Str"]:
-                    return ["E", "Input of type " + type + " cannot be added to supergraph"]
+                    raise Exception("Input of type " + type + " cannot be added to supergraph")
             for param in parameters:
-                Supergraph.addNode(Evaluator.S, param)
+                Supergraph.addNode(param)
             return ["V", ""]
 
         if function in ["GETNODES"]:
             # converts a list of names into a nodelist,  removing ones that don't exist in the supergraph
             if len(parameters) > 1:
                 if Evaluator.checkAllTypes(paramtypes, ['Str']):
-                    nodekeys = Supergraph.verifyNodeNames(Evaluator.S, parameters)
+                    nodekeys = Supergraph.verifyNodeNames(parameters)
                     return ["L",  [["N"]*len(nodekeys),nodekeys]]
-                return ["E",  "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
             else:
                 nodekeys = Supergraph.getAllNodeKeys(Evaluator.S)
                 return ["L", [["N"] * len(nodekeys), nodekeys]]
@@ -910,67 +977,67 @@ class Evaluator:
         if function == "REMOVENODES":
             if len(parameters) > 1:
                 if Evaluator.checkAllTypes(paramtypes, ['Str','N']):
-                    Evaluator.S.removeNodes(Supergraph.verifyNodeNames(Evaluator.S, parameters))
+                    Supergraph.removeNodes(Supergraph.verifyNodeNames(parameters))
                     return ["V", ""]
-                return ["E", "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
             elif len(parameters) == 1:
                 if paramtypes[0] in ['Str','N']:
-                    Evaluator.S.removeNodes(Supergraph.verifyNodeNames(Evaluator.S, parameters))
+                    Supergraph.removeNodes(Supergraph.verifyNodeNames(parameters))
                     return ["V", ""]
                 elif paramtypes[0] == 'L':
                     if Evaluator.checkAllTypes(parameters[0][0], ['Str', 'N']):
-                        Evaluator.S.removeNodes(Supergraph.verifyNodeNames(Evaluator.S, parameters[0][1]))
+                        Supergraph.removeNodes(Supergraph.verifyNodeNames(parameters[0][1]))
                         return ["V", ""]
                     else:
-                        return ["E", "Unexpected parameters given"]
+                        raise Exception("Unexpected parameters given")
                 elif paramtypes[0] == '*':
-                    Evaluator.S.removeNodes(Supergraph.getAllNodeKeys(Evaluator.S))
+                    Supergraph.removeNodes(Supergraph.getAllNodeKeys(Evaluator.S))
                     return ["V", ""]
                 else:
-                    return ["E", "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E", "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
 
         if function in ["ADDNODEDATA"]:
             if len(parameters) == 3:
                 # nodenames(L),  varname,  vardata
                 if (paramtypes[0:2] == ['L', 'Str']) and (paramtypes[2] in ['Str', 'Num']):
                     if Evaluator.checkAllTypes(parameters[0][0],["N"]):
-                        Supergraph.addNodeData(Evaluator.S, parameters[0][1], parameters[1], parameters[2], paramtypes[2])
+                        Supergraph.addNodeData(parameters[0][1], parameters[1], parameters[2], paramtypes[2])
                         return ["V",  ""]
                     else:
-                        return ["E", "Unexpected parameters given"]
+                        raise Exception("Unexpected parameters given")
                 else:
-                    return ["E",  "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E",  "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
 
         if function in ["REMOVENODEDATA"]:
             if len(parameters) == 3:
                 # nodenames,  varname
-                if (paramtypes[0:2] == ['L', 'Str']):
-                    # print Supergraph.verifyNodeNames(Evaluator.S, parameters[0])
+                if paramtypes[0:2] == ['L', 'Str']:
+                    # print Supergraph.verifyNodeNames(parameters[0])
                     if Evaluator.checkAllTypes(parameters[0][0], ["N"]):
-                        Supergraph.removeNodeData(Evaluator.S, parameters[0], parameters[1])
+                        Supergraph.removeNodeData(parameters[0], parameters[1])
                         return ["V",  ""]
-                return ["E",  "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
             else:
-                return ["E",  "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
 
         if function in ["GETNODEDATA"]:
             if len(parameters) == 2:
                 # nodenames,  varname
                 if paramtypes[0:2] == ['L', 'Str']:
                     if Evaluator.checkAllTypes(parameters[0][0], ["N"]):
-                        returnlist = Evaluator.S.getNodeData(parameters[0][1], parameters[1])
+                        returnlist = Supergraph.getNodeData(parameters[0][1], parameters[1])
                         return ["L",  returnlist]
-                return ["E",  "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
             else:
-                return ["E",  "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
 
         if function in ["LISTCONNECTIONS"]:
             if len(parameters) > 0:
-                return ["E", "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
             Supergraph.printConnectionList(Evaluator.S)
             return ["V", ""]
 
@@ -994,103 +1061,103 @@ class Evaluator:
 
                 # check if all items are Nodes
                 if Evaluator.checkAllTypes(lefttypes+righttypes,  ['N']):
-                    Evaluator.S.addConnections(leftkeys, rightkeys)
+                    Supergraph.addConnections(leftkeys, rightkeys)
                     return ["V", ""]
                 else:
-                    return ["E",  "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E",  "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
 
             
         if function in ["GETCONNECTIONS"]:
             # converts a list of names into a connectionlist,  removing ones that don't exist in the supergraph
             if len(parameters) > 1:
                 if Evaluator.checkAllTypes(paramtypes, ['Str']):
-                    connectionkeys = Supergraph.verifyConnectionNames(Evaluator.S, parameters)
+                    connectionkeys = Supergraph.verifyConnectionNames(parameters)
                     return ["L",  [["C"]*len(connectionkeys),connectionkeys]]
-                return ["E",  "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
             else:
-                connectionkeys = Supergraph.getAllConnectionKeys(Evaluator.S)
+                connectionkeys = Supergraph.getAllConnectionKeys()
                 return ["L", [["C"] * len(connectionkeys), connectionkeys]]
 
         if function in ["REMOVECONNECTIONS"]:
             if len(parameters) == 1 and paramtypes[0] == 'L':
                 if Evaluator.checkAllTypes(parameters[0][0], ['Str','C']):
-                    Evaluator.S.removeConnections(Supergraph.verifyConnectionNames(Evaluator.S,  parameters[0][1]))
+                    Supergraph.removeConnections(Supergraph.verifyConnectionNames( parameters[0][1]))
                     return ["V",  ""]
-                return ["E",  "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
             elif len(parameters) == 1:
                 if paramtypes[0] == 'Str':
-                    Evaluator.S.removeConnections(Supergraph.verifyConnectionNames(Evaluator.S,  parameters))
+                    Supergraph.removeConnections(Supergraph.verifyConnectionNames( parameters))
                     return ["V",  ""]
                 if paramtypes[0] == 'C':
-                    Evaluator.S.removeConnections(Supergraph.verifyConnectionNames(Evaluator.S,  parameters))
+                    Supergraph.removeConnections(Supergraph.verifyConnectionNames( parameters))
                     return ["V",  ""]
                 if paramtypes[0] == '*':
-                    Evaluator.S.removeConnections(Supergraph.getAllConnectionKeys(Evaluator.S))
+                    Supergraph.removeConnections(Supergraph.getAllConnectionKeys())
                     return ["V",  ""]
             else:
-                return ["E",  "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
 
         if function in ["ADDCONNECTIONDATA"]:
             if len(parameters) == 3:
                 # connectionnames(L),  varname,  vardata
                 if (paramtypes[0:2] == ['L', 'Str']) and (paramtypes[2] in ['Str', 'Num']):
                     if Evaluator.checkAllTypes(parameters[0][0],["C"]):
-                        Supergraph.addConnectionData(Evaluator.S, parameters[0][1], parameters[1], parameters[2], paramtypes[2])
+                        Supergraph.addConnectionData(parameters[0][1], parameters[1], parameters[2], paramtypes[2])
                         return ["V",  ""]
                     else:
-                        return ["E", "Unexpected parameters given"]
+                        raise Exception("Unexpected parameters given")
                 else:
-                    return ["E",  "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E",  "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
 
         if function in ["REMOVECONNECTIONDATA"]:
             if len(parameters) == 3:
                 # connectionnames,  varname
-                if (paramtypes[0:2] == ['L', 'Str']):
+                if paramtypes[0:2] == ['L', 'Str']:
                     if Evaluator.checkAllTypes(parameters[0][0], ["C"]):
-                        # print Supergraph.verifyConnectionNames(Evaluator.S, parameters[0])
-                        Supergraph.removeConnectionData(Evaluator.S, parameters[0][1], parameters[1])
+                        # print Supergraph.verifyConnectionNames(parameters[0])
+                        Supergraph.removeConnectionData(parameters[0][1], parameters[1])
                         return ["V",  ""]
-                return ["E",  "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
             else:
-                return ["E",  "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
 
         if function in ["GETCONNECTIONDATA"]:
             if len(parameters) == 2:
                 # connectionnames,  varname
                 if paramtypes[0:2] == ['L', 'Str']:
                     if Evaluator.checkAllTypes(parameters[0][0], ["C"]):
-                        returnlist = Evaluator.S.getConnectionData(parameters[0][1], parameters[1])
+                        returnlist = Supergraph.getConnectionData(parameters[0][1], parameters[1])
                         return ["L",  returnlist]
-                return ["E",  "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
             else:
 
-                return ["E",  "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
 
         if function in ["LISTGRAPHS"]:
             if len(parameters) > 0:
-                return ["E", "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
             Supergraph.printGraphList(Evaluator.S)
             return ["V", ""]
 
         if function in ["ADDGRAPHS"]:
             if Evaluator.checkAllTypes(paramtypes,["Str"]):
                 for param in parameters:
-                    Supergraph.addGraph(Evaluator.S, param)
+                    Supergraph.addGraph(param)
             else:
-                return ["E", "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
             return ["V", ""]
         
         if function in ["GETGRAPHS"]:
             # converts a list of names into a graphlist,  removing ones that don't exist in the supergraph
             if len(parameters) > 1:
                 if Evaluator.checkAllTypes(paramtypes, ['Str']):
-                    graphkeys = Supergraph.verifyGraphNames(Evaluator.S, parameters)
+                    graphkeys = Supergraph.verifyGraphNames(parameters)
                     return ["L",  [["G"]*len(graphkeys),graphkeys]]
-                return ["E",  "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
             else:
                 graphkeys = Supergraph.getAllGraphKeys(Evaluator.S)
                 return ["L", [["G"] * len(graphkeys), graphkeys]]
@@ -1098,11 +1165,11 @@ class Evaluator:
         if function in ["REMOVEGRAPHS"]:
             if len(parameters) >= 1:
                 if Evaluator.checkAllTypes(paramtypes, ['Str','G']):
-                    Evaluator.S.removeGraphs(Supergraph.verifyGraphNames(Evaluator.S,  parameters))
+                    Supergraph.removeGraphs(Supergraph.verifyGraphNames( parameters))
                     return ["V",  ""]
-                return ["E",  "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
             else:
-                Evaluator.S.removeGraphs(Supergraph.getAllGraphKeys(Evaluator.S))
+                Supergraph.removeGraphs(Supergraph.getAllGraphKeys(Evaluator.S))
                 return ["V",  ""]
 
         if function in ["QUERY"]:
@@ -1123,12 +1190,12 @@ class Evaluator:
                                 returnlist[1].append(item)
                         return ["L",returnlist]
                 else:
-                    return ["E", "Unexpected parameters given"]
+                    raise Exception("Unexpected parameters given")
             else:
-                return ["E", "Unexpected parameters given"]
+                raise Exception("Unexpected parameters given")
 
         # return error if no function defintion found
-        return ["E", "Unknown function " + function]
+        raise Exception("Unknown function " + function)
 
     @staticmethod
     def evaluateExpression(expression, this = ""):
@@ -1200,10 +1267,6 @@ class Evaluator:
                     if opHeight[-1] == paramHeights[-1]:
                         # Evaluate result of function call
                         result = Evaluator.evaluateFunction(opStack[-1], paramStack[-1], paramType[-1])
-                        # report any errors
-                        if result[0] == "E":
-                            print result
-                            return
 
                         # Add results to stacks
                         paramStack[-1] = [result[1]]
@@ -1253,14 +1316,14 @@ class Evaluator:
                 paramType[-1].append("V")
             elif category == "?":
                 # Unknown category; search supergraph for data and inject it if possible
-                data = Evaluator.S.getData(token)
+                data = Supergraph.getData(token)
                 if data is not None:
                     paramStack[-1].append(data[1])
                     paramType[-1].append(data[0])
                 else:
                     # Failed to find anything in supergraph; look in objects in supergraph
                     pointers = token.split(data_pointer)
-                    data = Supergraph.getPointerData(Evaluator.S, pointers, this)
+                    data = Supergraph.getPointerData(pointers, this)
                     if data is not None:
                         paramStack[-1].append(data[1][0])
                         paramType[-1].append(data[0][0])
@@ -1285,13 +1348,6 @@ class Evaluator:
                             # Evaluate the binary operator
                             result = Evaluator.evaluateFunction(opStack[-1], [leftparam, rightparam], [lefttype, righttype])
 
-                            # # Report error
-                            # if result[0] == "E":
-                            #     print result
-                            #     raise Exception("ERROR " + result[1])
-                            if result[0] == "E":
-                                return result
-
                             # put results in stacks
                             paramStack[-1].append(result[1])
                             paramType[-1].append(result[0])
@@ -1308,9 +1364,7 @@ class Evaluator:
                             righttype = paramType[-1].pop()
                             # Negate the value
                             result = Evaluator.evaluateFunction(opStack[-1], [0, rightparam], ["Num", righttype])
-                            # Report error
-                            if result[0] == "E":
-                                return result
+
                             # put results in stacks
                             paramStack[-1].append(result[1])
                             paramType[-1].append(result[0])
@@ -1326,92 +1380,6 @@ class Evaluator:
             return [paramType,paramStack]
 
     @staticmethod
-    def tokenizeExpression(expression):
-        # returns a list of tokens in the expression
-        # tokens are parentheses,  math operators,  commas,  function names,  and literals
-        print 'Expression: ' + expression
-
-        specialchars = ['\t', '-', '+', '/', '*', '%', '(', ')', ',']
-        returnlist = []         # return list,  containing the tokens
-        current_token = ''
-
-        #used for escaping
-        escape_char = "\\"  # escapes the next character
-        previous_char = None;   # keeps track of character before one being looked at
-
-        #comment variables
-        comment_char = "#"  # character indicating start of comment and to stop tokenizing
-        specialchars.append(comment_char)   #add comment character to list of special chars
-
-        #quote variables
-        quote_chars = ["'", '"']    # Characters indicating a quote
-        is_quoted = False           # If the text is being processed as a string token
-        # The outermost quote character. Determines if ' or " is used to end the string token
-        # This allows the user to use ' or " in strings by using the other one as the outer
-        outer_quote_char = None # will be ' or " once a quote starts
-
-        for char in expression:
-            #  if the chars are currently being parsed as strings
-            if is_quoted:
-                # check if the string ends
-                if char == outer_quote_char and previous_char != escape_char:
-                    returnlist.append(outer_quote_char+current_token+outer_quote_char) # add string token
-                    current_token = ""                  # reset token
-                    is_quoted = False                   # no longer parsing text as a string
-                #  string does not end
-                else:
-                    #used an escape char but didn't actually escape anything
-                    if previous_char == escape_char and char not in [escape_char,outer_quote_char]:
-                        current_token += escape_char  # add escape char to current string
-                        current_token += char  # add current char to current string
-                    else:
-                        #used an escape char and did escape
-                        if char != escape_char or previous_char == escape_char:
-                            current_token += char  # add current char to current string
-            #  chars are not being parsed as strings
-            else:
-                # check opening to string
-                if char in quote_chars:
-                    cleantoken = current_token.replace(' ',  '')  # strip whitespace from current token
-                    if len(cleantoken) > 0:  # check if whitespace removed token is not empty
-                        returnlist.append(cleantoken)  # add it then
-
-                    current_token = ""      # Reset token
-                    is_quoted = True        # Start parsing as a string
-                    outer_quote_char = char # mark whether the string starts and ends with a ' or "
-                # not opening to string
-                else:
-                    #check if a special character such as an operator or comment
-                    if char in specialchars:
-                        cleantoken = current_token.replace(' ',  '')  #  strip whitespace from current token
-                        if len(cleantoken) > 0:  #  check if whitespace removed token is not empty
-                            returnlist.append(cleantoken)  #  add it then
-                            current_token = ''
-                        # if start of comment
-                        if char == comment_char:
-                            break  # comment started; stop tokenizing
-                        else:
-                            returnlist.append(char) #add special character to token list
-                    else:
-                        current_token += char
-
-            # If you double escaped, then set last character to none
-            if char == escape_char and previous_char == escape_char:
-                previous_char = None
-            else:
-                previous_char = char   #set last character to current one
-
-        # check if open quote
-        if is_quoted:
-            print 'open quote!'
-            return []
-
-        if len(current_token) > 0:
-            returnlist.append(current_token)
-
-        return returnlist
-
-    @staticmethod
     def tokenizeExpressionRegex(expression):
         # Improved algorithm for tokenizing a math expression
 
@@ -1420,8 +1388,9 @@ class Evaluator:
         quote_chars = ["'", '"']
         outer_quote_char = None  # will be ' or " once a quote starts
         comment_substring = '#'
+        tab = '\t'
 
-        regstring = '(\*|/|\+|\-|\(|\)|%|==|!=|>=|<=|>|<|&&|\\|\\||in|,|"|\'|#|\\\\'+"|"+comment_substring + ")"
+        regstring = '(\*|/|\+|\-|\(|\)|%|==|!=|>=|<=|>|<|&&|\\|\\||in|,|"|\'|#|\\\\'+"|"+tab+"|"+comment_substring + ")"
         initial_tokens = re.split(regstring, expression)    # tokenize the expression initially
         final_tokens = []   # final token list
 
@@ -1432,7 +1401,7 @@ class Evaluator:
                 # not being parsed as a string
                 if token == comment_substring:
                     # start of a comment; stop tokenizing
-                    break;
+                    break
                 elif token in quote_chars:
                     # start of a string
                     final_tokens.append(token)
@@ -1450,61 +1419,198 @@ class Evaluator:
                     if is_escaped:
                         # add escape char as literal
                         final_tokens[-1] = final_tokens[-1] + "\\"
-                        is_escaped = False;
+                        is_escaped = False
                     else:
                         # first escape character
-                        is_escaped = True;
+                        is_escaped = True
                 elif token == outer_quote_char:
                     # at quote char
                     if not is_escaped:
                         # Quote is not escaped; end quote mode
                         is_quoted = False
                     final_tokens[-1] = final_tokens[-1] + token
-                    is_escaped = False;
+                    is_escaped = False
                 else:
                     if len(token) > 0:
                         # merge any tokens into a single string token
                         # this is the body of the string
                         final_tokens[-1] = final_tokens[-1] + token
-                        is_escaped = False;
+                        is_escaped = False
 
         return final_tokens
 
-# # # DRIVER CODE# # #
+    @staticmethod
+    def checkTokenLegality(token):
+        # returns True if token is not a keyword used by database
+        assert type(token) is str
+        if token in Evaluator.function_names:
+            return False
+        if token in Evaluator.operators:
+            return False
+        for illegal_char in Evaluator.reserved_chars:
+            if illegal_char in token:
+                return False
+        return True
+
+
+
+class FileHandler:
+    @staticmethod
+    def writeGraphFile(filename="", version_num=1.00, data_seperator="|||", value_seperator="::",
+                       nodekeys= [], connectionkeys= [], graphkeys= []):
+        # writes a list of nodes, edges, graphs, and their associated data to a file
+
+        # throw error if file version doesn't exist or seperators
+        assert version_num in [1.00]
+        assert len(data_seperator) > 0
+        assert len(value_seperator) > 0
+
+        # open file and write first three lines
+        fname = open(filename, "w")
+        fname.write(str(version_num))
+        fname.write("\n" + data_seperator)
+        fname.write("\n" + value_seperator)
+
+        # convert keys to pointers
+        n_list = Supergraph.namesToNodes(nodekeys)
+        c_list = Supergraph.namesToConnections(connectionkeys)
+        g_list = Supergraph.namesToGraphs(graphkeys)
+
+        # write nodes to file
+        for node in n_list:
+            data = node.nodedata  # pull data from node
+            fname.write("\n" + node.name)  # write node name
+            for d in data.keys():  # write node data
+                if node.getNodeData(d)[0] != 'L':
+                    value_type = node.getNodeData(d)[0]
+                    value = node.getNodeData(d)[1]
+                    fname.write(data_seperator + d + value_seperator + str(value) + value_seperator + value_type)
+
+                    # print(d,data[d])
+        fname.write("\n")
+
+        for con in c_list:
+            data = con.connectiondata  # pull data from node
+            fname.write("\n" + con.name + value_seperator + con.leftkey + value_seperator + con.rightkey)  # write node name
+            for d in data.keys():  # write connection data
+                if con.getConnectionData(d)[0] != 'L':
+                    value_type = con.getConnectionData(d)[0]
+                    value = con.getConnectionData(d)[1]
+                    fname.write(data_seperator + d + value_seperator + str(value) + value_seperator + value_type)
+
+        fname.close()
+
+    @staticmethod
+    def readGraphFile(filename="", conflict_handling = "overwrite"):
+        # conflict handling:
+        #   overwrite: overwrites all data if conflict is found
+        #   ignore-attribute: Only adds data if it doesn't exist, ignoring pre-existing attributes
+        #   ignore-row: Skips row if conflict found
+        #   ignore-all: Reads file once to find conflicts, then ignores file if any found
+
+        print("READING FILE:    " +filename+"...")
+        fname = open(filename, "r")
+
+        version_num = fname.readline().rstrip()
+        data_seperator = fname.readline().rstrip()  # data seperator seperates the list of key:value pairs
+        value_seperator = fname.readline().rstrip() # value seperator seperates the keys from the values
+
+        assert version_num in ["1.0"]   # make sure version used is compliant
+        assert data_seperator != "" # make sure an actual string is used for splitting
+        assert value_seperator != data_seperator    # data and value seperators can't be the same
+        assert value_seperator != ""
+
+        print("READING NODES...")
+
+        line = fname.readline().rstrip()    # read in first line
+        while line != "":   # read nodes until an empty line is detected
+            print(line)
+            node_name = None
+            data = line.split(data_seperator)
+            for data_index in range(0,len(data)):
+                values = data[data_index].split(value_seperator)
+                if data_index == 0:
+                    # first section; should just be the node name and nothing else
+                    assert len(values) == 1 #there should just be the node name
+                    node_name = str(values[0])
+                    assert Evaluator.checkTokenLegality(node_name)  # node should not be illegal to use
+                    Supergraph.addNode(node_name)
+                else:
+                    # data section. Should be triples in the form of varname, varvalue, vartype
+                    assert len(values) == 3  # there should be 3 items
+                    varname = values[0]
+                    varvalue = values[1]
+                    vartype = values[2]
+
+                    Supergraph.addNodeData([node_name],varname,varvalue,vartype)
+
+                    #TODO: ADD IN LIST HANDLING
+
+            line = fname.readline().rstrip()    # get next line
+
+
+
+        print("READING CONNECTIONS...") # read connections until an empty line is detected
+
+        line = fname.readline().rstrip()  # get next line
+        while line != "":
+            print(line)
+            con_name = None
+            data = line.split(data_seperator)
+            for data_index in range(0, len(data)):
+                values = data[data_index].split(value_seperator)
+                if data_index == 0:
+                    # first section; should be connection name, left key, right key
+                    assert len(values) == 3
+                    con_name = str(values[0])
+                    leftkey = str(values[1])
+                    rightkey = str(values[2])
+
+                    assert Evaluator.checkTokenLegality(con_name)  # connection should not be illegal to use
+                    assert Evaluator.checkTokenLegality(leftkey)  # left key should not be illegal to use
+                    assert Evaluator.checkTokenLegality(rightkey)  # right key should not be illegal to use
+                    Supergraph.addConnection(con_name, leftkey, rightkey)
+                else:
+                    # data section. Should be triples in the form of varname, varvalue, vartype
+                    assert len(values) == 3  # there should be 3 items
+                    varname = values[0]
+                    varvalue = values[1]
+                    vartype = values[2]
+                    # add data to connection
+                    Supergraph.addConnectionData([con_name], varname, varvalue, vartype)
+
+            line = fname.readline().rstrip()  # get next line
+            #TODO: ADD IN LIST HANDLING
+
+    # # # DRIVER CODE# # #
+
 import time # used for getting unix time
 import Queue    # used for priority queues
 import re       # regex library
 import random   # used for random functions
 
-# somestr = "1+2+3-5+(3 - 2 + \"hello + world\" + '5'\) # == 5"
-# #print re.split('(\+|\-|\(|\)|==|")',somestr)
-# print Evaluator.tokenizeExpressionRegex(somestr)
-
-# q = Queue.PriorityQueue()
-# q.put((10,'ten'))
-# q.put((1,'one'))
-# q.put((5,'five'))
-# while not q.empty():
-#     print str(q.get())
-
 file = open('script.txt', 'r')
 x = file.readlines()
 for i in x:
-#      # print Evaluator.tokenizeExpression(i.rstrip())
-     Evaluator.evaluateExpression(i.rstrip())
+    try:
+        Evaluator.evaluateExpression(i.rstrip())
+    except Exception,e:
+        print("\n\n\n"+str(e)+"\n\n\n")
 
+print("writing to file")
+FileHandler.writeGraphFile("testfile.txt",1.00,"|||","::",Supergraph.nodelist.keys(),Supergraph.connectionlist.keys())
+print("removing everything")
+Supergraph.removeNodes(Supergraph.getAllNodeKeys())
+Supergraph.removeConnections(Supergraph.getAllConnectionKeys())
+print "nodes: ",Supergraph.getAllNodeKeys()
+print "connections: ",Supergraph.getAllConnectionKeys()
+print("reading from file")
+FileHandler.readGraphFile("testfile.txt")
+print "nodes: ",Supergraph.getAllNodeKeys()
+print "connections: ",Supergraph.getAllConnectionKeys()
 
-
-n = Evaluator.S.nodelist.keys()[0:2]
-c = Evaluator.S.connectionlist.keys()
-print "nodes:",n
-print "connections:",c
-print Evaluator.S.getNodeConnections(n,c)
-print Evaluator.S.showAllConnections()
-
-print "connections: ",Evaluator.S.nodeconnectionlist
 
 #                      __
 #         _______     /*_)-< HISS HISS
 #   ___ /  _____  \__/ /
-#  < ____ /     \____ /
+#  <____ /      \____ /
