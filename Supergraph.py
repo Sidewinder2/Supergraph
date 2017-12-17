@@ -12,7 +12,7 @@ class Supergraph:
     connectionidsuffix = 0   # ID counter for naming connections automatically
 
     @staticmethod
-    def getNodeConnectionList(self):
+    def getNodeConnectionList():
         return Supergraph.nodeconnectionlist
 
     @staticmethod
@@ -105,12 +105,12 @@ class Supergraph:
             Supergraph.keylist.remove(graphname)
 
     @staticmethod
-    def getAllGraphKeys(self):
+    def getAllGraphKeys():
         #  Lists names of all existing graphs
         return Supergraph.graphlist.keys()
 
     @staticmethod
-    def printGraphList(self):
+    def printGraphList():
         #  Lists names of all existing graphs
         print Supergraph.graphlist.keys()
 
@@ -161,7 +161,7 @@ class Supergraph:
         return Supergraph.nodelist.keys()
 
     @staticmethod
-    def printNodeList(self):
+    def printNodeList():
         # lists the node keys
         print Supergraph.nodelist.keys()
 
@@ -252,7 +252,7 @@ class Supergraph:
         # removes the specified connections,  if they exist
         for connectionkey in connectionnames:
             if connectionkey in Supergraph.connectionlist.keys():
-                # remove left and right references
+                # remove references to this connection for the left and right nodes it connects
                 c = Supergraph.connectionlist[connectionkey]
                 if c.leftkey in Supergraph.nodeconnectionlist:
                     if connectionkey in Supergraph.nodeconnectionlist[c.leftkey]:
@@ -365,31 +365,31 @@ class Graph:
         self.nodekeys = nodekeys                   # list of node keys used in this graph
         self.connectionkeys = connectionkeys       # list of connection keys used in this graph
 
-    def addConnections(self,connections):
-        for connection in connections:
-            if connection in self.connectionkeys:
-                self.connectionkeys.remove(connection)
-
-    def getConnections(self):
-        return self.connectionkeys
-
-    def removeConnections(self,connections):
-        for connection in connections:
-            if connection not in self.connectionkeys:
-                self.connectionkeys.append(connection)
-
-    def addNodes(self, nodes):
-        for node in nodes:
-            if node not in self.nodekeys:
-                self.nodekeys.append(node)
-
-    def getNodes(self):
-        return self.nodekeys
-
-    def removeNodes(self,nodes):
-        for node in nodes:
-            if node in self.nodekeys:
-                self.nodekeys.remove(node)
+    # def addConnections(self,connections):
+    #     for connection in connections:
+    #         if connection in self.connectionkeys:
+    #             self.connectionkeys.remove(connection)
+    #
+    # def getConnections(self):
+    #     return self.connectionkeys
+    #
+    # def removeConnections(self,connections):
+    #     for connection in connections:
+    #         if connection not in self.connectionkeys:
+    #             self.connectionkeys.append(connection)
+    #
+    # def addNodes(self, nodes):
+    #     for node in nodes:
+    #         if node not in self.nodekeys:
+    #             self.nodekeys.append(node)
+    #
+    # def getNodes(self):
+    #     return self.nodekeys
+    #
+    # def removeNodes(self,nodes):
+    #     for node in nodes:
+    #         if node in self.nodekeys:
+    #             self.nodekeys.remove(node)
 
 class Node:
     def __init__(self, name):
@@ -450,18 +450,94 @@ class Connection:
 class ArtPointsFinder:
     # Todo: Implement ArtPointsFinder
 
-    def __init__(self):
-        self.visited = set()        # maintains list of previously visited nodes
-        self.node_to_parent = {}    # maintains parent heirarchy in DFS
-        self.node_to_index = {}     # maintains index of given node
-        self.node_to_low = {}       # maintains low value of given node
+    @staticmethod
+    def getArtPoints(nodes = [], connections = {}):
+        assert type(nodes) is list
+        assert type(connections) is dict
+        assert len(nodes) > 0
+        assert len(connections.keys()) > 0
 
-    def getArtPoints(self,nodes = [], connections = []):
+        print ("Current nodes: ",nodes)
         # Returns articulated points, given a list of node and connection keys
-        self.visited.clear()
-        self.node_to_parent.clear()
-        self.node_to_index.clear()
-        self.node_to_low.clear()
+        unvisited_nodes = list(nodes)  # maintains list of previously visited nodes
+        unvisited_connections = connections.keys()
+        node_to_parent = {}             # maintains parent heirarchy in DFS
+        node_to_index = {}              # maintains index of given node
+        node_to_low = {}                # maintains low value of given node
+        counter = 1
+
+        node_stack = list(nodes)
+        current_node_key = ""
+
+        # remove all connections that point somewhere not in the subgraph
+        for conn in unvisited_connections:
+            if connections[conn].leftkey not in unvisited_nodes or connections[conn].rightkey not in unvisited_nodes:
+                unvisited_connections.remove(conn)
+
+
+        while len(node_stack) > 0:
+            # pop item from stack to create a DFS
+            current_node_key = node_stack.pop(0)
+            print("Current node: ", current_node_key)
+
+            if current_node_key in unvisited_nodes:
+                # new node found. Assign values
+                unvisited_nodes.remove(current_node_key)                 # node has now been visited
+                node_to_index[current_node_key] = counter           # its index is current counter
+                node_to_parent[current_node_key] = ""                 # its parent is the last enountered node
+
+                node_to_low[current_node_key] = counter
+                counter += 1  # increment counter
+
+            # iterate through all connections for the current node
+            for conn in unvisited_connections:
+                leftkey = connections[conn].leftkey
+                rightkey = connections[conn].rightkey
+
+                # from left to right
+                if leftkey == current_node_key:
+                    print("Current connection: ", conn, "left:", leftkey, "right: ", rightkey)
+                    unvisited_connections.remove(conn)
+
+                    if rightkey in unvisited_nodes:
+                        print("unvisited",unvisited_nodes)
+                        # new node found. Assign values
+                        node_stack.insert(0,rightkey)
+                        unvisited_nodes.remove(rightkey)  # node has now been visited
+                        node_to_index[rightkey] = counter  # its index is current counter
+                        node_to_parent[rightkey] = leftkey  # its parent is the last enountered node
+                        node_to_low[rightkey] = counter
+                        counter += 1  # increment counter
+                        print("Current counter: ", counter)
+                    elif node_to_low[leftkey] > node_to_low[rightkey]:
+                        print("\tWAT",leftkey,rightkey)
+                        temp_value = node_to_index[rightkey]
+                        child_key = leftkey
+                        node_to_low[leftkey] = temp_value
+                        while child_key != "":
+                            print ("\t" + child_key)
+                            if node_to_parent[child_key] != "":
+                                if node_to_low[node_to_parent[child_key]] > node_to_low[child_key]:
+                                    node_to_low[child_key] = temp_value
+                            child_key = node_to_parent[child_key]
+
+        # at the end print all nodes and data about them
+        for nodekey in node_to_parent.keys():
+            print(nodekey, "parent:",node_to_parent[nodekey])
+            print("index:",node_to_index[nodekey])
+            print("low:",node_to_low[nodekey])
+
+        for conn in connections.keys():
+            leftkey = connections[conn].leftkey
+            rightkey = connections[conn].rightkey
+            if node_to_low[rightkey] < node_to_index[leftkey]:
+                print(leftkey + " is art point")
+
+
+
+
+
+
 
 
 class Evaluator:
@@ -952,7 +1028,7 @@ class Evaluator:
         if function in ["LISTNODES"]:
             if len(parameters) > 0:
                 raise Exception("Unexpected parameters given")
-            Supergraph.printNodeList(Evaluator.S)
+            Supergraph.printNodeList()
             return ["V",  ""]
 
         if function in ["ADDNODES"]:
@@ -971,7 +1047,7 @@ class Evaluator:
                     return ["L",  [["N"]*len(nodekeys),nodekeys]]
                 raise Exception("Unexpected parameters given")
             else:
-                nodekeys = Supergraph.getAllNodeKeys(Evaluator.S)
+                nodekeys = Supergraph.getAllNodeKeys()
                 return ["L", [["N"] * len(nodekeys), nodekeys]]
 
         if function == "REMOVENODES":
@@ -991,7 +1067,7 @@ class Evaluator:
                     else:
                         raise Exception("Unexpected parameters given")
                 elif paramtypes[0] == '*':
-                    Supergraph.removeNodes(Supergraph.getAllNodeKeys(Evaluator.S))
+                    Supergraph.removeNodes(Supergraph.getAllNodeKeys())
                     return ["V", ""]
                 else:
                     raise Exception("Unexpected parameters given")
@@ -1038,7 +1114,7 @@ class Evaluator:
         if function in ["LISTCONNECTIONS"]:
             if len(parameters) > 0:
                 raise Exception("Unexpected parameters given")
-            Supergraph.printConnectionList(Evaluator.S)
+            Supergraph.printConnectionList()
             return ["V", ""]
 
         if function == "ADDCONNECTIONS":
@@ -1140,7 +1216,7 @@ class Evaluator:
         if function in ["LISTGRAPHS"]:
             if len(parameters) > 0:
                 raise Exception("Unexpected parameters given")
-            Supergraph.printGraphList(Evaluator.S)
+            Supergraph.printGraphList()
             return ["V", ""]
 
         if function in ["ADDGRAPHS"]:
@@ -1159,7 +1235,7 @@ class Evaluator:
                     return ["L",  [["G"]*len(graphkeys),graphkeys]]
                 raise Exception("Unexpected parameters given")
             else:
-                graphkeys = Supergraph.getAllGraphKeys(Evaluator.S)
+                graphkeys = Supergraph.getAllGraphKeys()
                 return ["L", [["G"] * len(graphkeys), graphkeys]]
         
         if function in ["REMOVEGRAPHS"]:
@@ -1169,7 +1245,7 @@ class Evaluator:
                     return ["V",  ""]
                 raise Exception("Unexpected parameters given")
             else:
-                Supergraph.removeGraphs(Supergraph.getAllGraphKeys(Evaluator.S))
+                Supergraph.removeGraphs(Supergraph.getAllGraphKeys())
                 return ["V",  ""]
 
         if function in ["QUERY"]:
@@ -1589,26 +1665,27 @@ import Queue    # used for priority queues
 import re       # regex library
 import random   # used for random functions
 
-file = open('script.txt', 'r')
-x = file.readlines()
-for i in x:
-    try:
-        Evaluator.evaluateExpression(i.rstrip())
-    except Exception,e:
-        print("\n\n\n"+str(e)+"\n\n\n")
+# file = open('script.txt', 'r')
+# x = file.readlines()
+# for i in x:
+#     try:
+#         Evaluator.evaluateExpression(i.rstrip())
+#     except Exception,e:
+#         print("\n\n\n"+str(e)+"\n\n\n")
 
-print("writing to file")
-FileHandler.writeGraphFile("testfile.txt",1.00,"|||","::",Supergraph.nodelist.keys(),Supergraph.connectionlist.keys())
-print("removing everything")
-Supergraph.removeNodes(Supergraph.getAllNodeKeys())
-Supergraph.removeConnections(Supergraph.getAllConnectionKeys())
-print "nodes: ",Supergraph.getAllNodeKeys()
-print "connections: ",Supergraph.getAllConnectionKeys()
-print("reading from file")
+# print("writing to file")
+# FileHandler.writeGraphFile("testfile.txt",1.00,"|||","::",Supergraph.nodelist.keys(),Supergraph.connectionlist.keys())
+# print("removing everything")
+# Supergraph.removeNodes(Supergraph.getAllNodeKeys())
+# Supergraph.removeConnections(Supergraph.getAllConnectionKeys())
+# print "nodes: ",Supergraph.getAllNodeKeys()
+# print "connections: ",Supergraph.getAllConnectionKeys()
+# print("reading from file")
 FileHandler.readGraphFile("testfile.txt")
-print "nodes: ",Supergraph.getAllNodeKeys()
-print "connections: ",Supergraph.getAllConnectionKeys()
+# print "nodes: ",Supergraph.getAllNodeKeys()
+# print "connections: ",Supergraph.getAllConnectionKeys()
 
+ArtPointsFinder.getArtPoints(Supergraph.getAllNodeKeys(),Supergraph.connectionlist)
 
 #                      __
 #         _______     /*_)-< HISS HISS

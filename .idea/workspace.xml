@@ -15,21 +15,11 @@
       <file leaf-file-name="Supergraph.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Supergraph.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="364">
-              <caret line="1390" column="18" lean-forward="true" selection-start-line="1390" selection-start-column="18" selection-end-line="1390" selection-end-column="18" />
+            <state relative-caret-position="-806">
+              <caret line="367" column="9" lean-forward="false" selection-start-line="367" selection-start-column="4" selection-end-line="367" selection-end-column="9" />
               <folding>
-                <element signature="e#70134#70174#0" expanded="true" />
+                <element signature="e#73685#73725#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="script.txt" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/script.txt">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="663">
-              <caret line="39" column="0" lean-forward="false" selection-start-line="39" selection-start-column="0" selection-end-line="39" selection-end-column="0" />
-              <folding />
             </state>
           </provider>
         </entry>
@@ -37,8 +27,28 @@
       <file leaf-file-name="testfile.txt" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/testfile.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="153">
-              <caret line="9" column="33" lean-forward="false" selection-start-line="9" selection-start-column="33" selection-end-line="9" selection-end-column="33" />
+            <state relative-caret-position="119">
+              <caret line="7" column="0" lean-forward="true" selection-start-line="7" selection-start-column="0" selection-end-line="7" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="testfile2.txt" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/testfile2.txt">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="306">
+              <caret line="18" column="40" lean-forward="false" selection-start-line="18" selection-start-column="40" selection-end-line="18" selection-end-column="40" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="testfile3.txt" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/testfile3.txt">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="0">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -55,19 +65,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>showAll</find>
-      <find>addConnection</find>
-      <find>namesToConnections</find>
-      <find>nodedata</find>
-      <find>Ge</find>
-      <find>showAllConnections</find>
-      <find>data_pointer</find>
-      <find>return resu</find>
-      <find>return [&quot;E&quot;,  &quot;Unexpected parameters given&quot;]</find>
-      <find>return [&quot;E&quot;,</find>
-      <find>Exception</find>
-      <find>Unknown function</find>
-      <find>&quot;+&quot;</find>
       <find>tokenize</find>
       <find>getNodeData</find>
       <find>getPointer</find>
@@ -85,6 +82,19 @@
       <find>addNode</find>
       <find>regex</find>
       <find>Regex</find>
+      <find>self.</find>
+      <find>verifyConnectionNames</find>
+      <find>Art</find>
+      <find>removeConnection</find>
+      <find>artic</find>
+      <find>Evaluator.S</find>
+      <find>GETNODES</find>
+      <find>printNodeList</find>
+      <find>ADDCONNECTIONS</find>
+      <find>self</find>
+      <find>Connection</find>
+      <find>addConnections</find>
+      <find>Arti</find>
     </findStrings>
     <replaceStrings>
       <replace>#</replace>
@@ -119,17 +129,18 @@
         <option value="$PROJECT_DIR$/Driver.py" />
         <option value="$PROJECT_DIR$/Node.py" />
         <option value="$PROJECT_DIR$/Graph.py" />
-        <option value="$PROJECT_DIR$/testfile2.txt" />
         <option value="$PROJECT_DIR$/script.txt" />
+        <option value="$PROJECT_DIR$/testfile2.txt" />
+        <option value="$PROJECT_DIR$/testfile.txt" />
         <option value="$PROJECT_DIR$/Supergraph.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="126" />
-    <option name="y" value="92" />
-    <option name="width" value="1668" />
-    <option name="height" value="875" />
+    <option name="x" value="284" />
+    <option name="y" value="77" />
+    <option name="width" value="912" />
+    <option name="height" value="679" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -168,6 +179,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
@@ -183,7 +195,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -304,19 +315,19 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="126" y="92" width="1668" height="875" extended-state="0" />
+    <frame x="284" y="77" width="912" height="679" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.18038741" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.12611607" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32996634" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2937337" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.29298246" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39817232" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39817232" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -324,7 +335,7 @@
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24963397" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Inspection Results" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32898173" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32767624" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3263158" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
     <layout-to-restore>
@@ -356,12 +367,12 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Supergraph.py</url>
-          <line>1319</line>
+          <line>1395</line>
           <option name="timeStamp" value="24" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Supergraph.py</url>
-          <line>1326</line>
+          <line>1402</line>
           <option name="timeStamp" value="25" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -376,7 +387,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Supergraph.py</url>
-          <line>1328</line>
+          <line>1404</line>
           <option name="timeStamp" value="30" />
         </line-breakpoint>
       </breakpoints>
@@ -393,7 +404,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -403,7 +414,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -413,17 +424,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Supergraph.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -433,7 +434,7 @@
         <state relative-caret-position="5695">
           <caret line="730" column="64" lean-forward="true" selection-start-line="730" selection-start-column="64" selection-end-line="730" selection-end-column="64" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -443,7 +444,7 @@
         <state relative-caret-position="5219">
           <caret line="307" column="30" lean-forward="false" selection-start-line="307" selection-start-column="30" selection-end-line="307" selection-end-column="30" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -453,7 +454,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -463,7 +464,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -473,7 +474,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -483,7 +484,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -493,7 +494,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -503,7 +504,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -513,7 +514,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -523,7 +524,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -533,7 +534,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -543,7 +544,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -553,7 +554,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -563,7 +564,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -573,7 +574,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -583,7 +584,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -593,7 +594,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -603,7 +604,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -613,7 +614,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -623,7 +624,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -633,7 +634,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -643,7 +644,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -653,7 +654,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -663,7 +664,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -673,7 +674,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -683,7 +684,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -693,7 +694,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -703,7 +704,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -713,7 +714,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -723,7 +724,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -733,7 +734,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -743,7 +744,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -754,7 +755,7 @@
         <state relative-caret-position="34">
           <caret line="2" column="28" lean-forward="true" selection-start-line="2" selection-start-column="28" selection-end-line="2" selection-end-column="28" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -786,29 +787,43 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/testfile2.txt" />
     <entry file="file://$PROJECT_DIR$/script.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="663">
-          <caret line="39" column="0" lean-forward="false" selection-start-line="39" selection-start-column="0" selection-end-line="39" selection-end-column="0" />
+        <state relative-caret-position="201">
+          <caret line="26" column="22" lean-forward="false" selection-start-line="26" selection-start-column="22" selection-end-line="26" selection-end-column="22" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/testfile3.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/testfile.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="153">
-          <caret line="9" column="33" lean-forward="false" selection-start-line="9" selection-start-column="33" selection-end-line="9" selection-end-column="33" />
+        <state relative-caret-position="119">
+          <caret line="7" column="0" lean-forward="true" selection-start-line="7" selection-start-column="0" selection-end-line="7" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/testfile2.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="306">
+          <caret line="18" column="40" lean-forward="false" selection-start-line="18" selection-start-column="40" selection-end-line="18" selection-end-column="40" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Supergraph.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="364">
-          <caret line="1390" column="18" lean-forward="true" selection-start-line="1390" selection-start-column="18" selection-end-line="1390" selection-end-column="18" />
+        <state relative-caret-position="-806">
+          <caret line="367" column="9" lean-forward="false" selection-start-line="367" selection-start-column="4" selection-end-line="367" selection-end-column="9" />
           <folding>
-            <element signature="e#70134#70174#0" expanded="true" />
+            <element signature="e#73685#73725#0" expanded="true" />
           </folding>
         </state>
       </provider>
