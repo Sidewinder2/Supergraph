@@ -1,3 +1,22 @@
+class KeyGenerator:
+    # Generator class that keeps track of automatic namings
+    # For instance, creates "Connection1","Connection2".... given "Connection" as a starting string
+    name_to_count = {}  # keeps track of autonumber for each name
+
+    @staticmethod
+    def getNextName(generatorname = "", existing_keys = []):
+        # Generates next key name in sequence that does not exist within existing key list
+        # If sequence does not exist, create one
+        return_string = ""
+        while True:
+            if generatorname not in KeyGenerator.name_to_count.keys(): # create new sequence
+                KeyGenerator.name_to_count[generatorname] = 0
+            possible_name = generatorname + str(KeyGenerator.name_to_count[generatorname])
+            if possible_name not in existing_keys:
+                return possible_name
+            else:
+                KeyGenerator.name_to_count[generatorname] = KeyGenerator.name_to_count[generatorname] + 1
+
 class Supergraph:
     keylist = []          # list of keys. Prevents a connection, graph and a node having the same name
     graphlist = {}        # dictionary maintaining a graph name to graph pointer conversion
@@ -6,9 +25,6 @@ class Supergraph:
     nodeconnectionlist = {}    # maintains a dictionary of nodes to lists of connections
 
     supergraphdata = {}   # dictionary maintaining a variable name to variable data conversion
-
-    connectionidprefix = "Connection"
-    connectionidsuffix = 0   # ID counter for naming connections automatically
 
     @staticmethod
     def getNodeConnectionList():
@@ -232,14 +248,14 @@ class Supergraph:
         return False
 
     @staticmethod
-    def addConnections( leftnames,  rightnames):
+    def addConnections( leftnames,  rightnames, generator = "Connection"):
         # Adds connections to the database
         # Will connect every node from left side to right side,  resulting in L * R connections
         verifiedleftnames = Supergraph.verifyNodeNames(leftnames)
         verifiedrightnames = Supergraph.verifyNodeNames(rightnames)
         for left in verifiedleftnames:
             for right in verifiedrightnames:
-                connectionname = Supergraph.getNextConnectionName()
+                connectionname = KeyGenerator.getNextName(generator, Supergraph.getAllConnectionKeys())
                 Supergraph.addConnection(connectionname, left, right)
 
     @staticmethod
@@ -406,12 +422,13 @@ class Node:
             del self.nodedata[varname]
 
 class Connection:
-    def __init__(self, name, leftkey, rightkey):
+    def __init__(self, name, leftkey, rightkey, direction = "both"):
         self.name = name   # unique name of the connection used as a key
         self.leftkey = leftkey     # name of left node
         self.rightkey = rightkey    #  name of left node
         self.connectiondata = {}    # maintains additional information about the connection
-        self.direction = 'both'     # The endpoint of the connection. Either left\right, or both for undirected.
+        assert direction in ['left','both']
+        self.direction = direction     # The endpoint of the connection. Either left for directed, or both for undirected.
 
     def addConnectionData(self,  varname,  vardata):
         if varname.lower() != "name":
@@ -432,7 +449,22 @@ class Connection:
     def removeConnectionData(self,  varname):
         if varname in self.connectiondata:
             del self.connectiondata[varname]
-            del self.connectiondatatype[varname]
+
+    def getEndPoint(self,startpoint):
+        # Used to traverse a connection, given the start point
+        # If you attempt to go the opposite way from a directed edge, it returns None
+        assert startpoint in [self.leftkey,self.rightkey]
+        if self.direction == "both":
+            if startpoint == self.leftkey:
+                return self.rightkey
+            else:
+                return self.leftkey
+        else:
+            if startpoint == self.leftkey:
+                return self.rightkey
+            else:
+                return None
+
 
 class ArtPointsFinder:
     # Todo: Implement ArtPointsFinder
@@ -520,14 +552,7 @@ class ArtPointsFinder:
             if node_to_low[rightkey] < node_to_index[leftkey]:
                 print(leftkey + " is art point")
 
-
-
-
-
-
-
-
-class Evaluator:
+class Interpreter:
     S = Supergraph()
     function_names = ['PRINT','PRINTKEYS', 'GETTIME',
                       'SUM', 'SUBTRACT','MULTIPLY', 'DIVIDE',
@@ -565,7 +590,7 @@ class Evaluator:
         # returns levenshtein distance of two strings
         # code from https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
         if len(s1) < len(s2):
-            return Evaluator.levenshtein(s2, s1)
+            return Interpreter.levenshtein(s2, s1)
 
         # len(s1) >= len(s2)
         if len(s2) == 0:
@@ -608,7 +633,7 @@ class Evaluator:
         file = open('keywords.txt', 'r')
         keywords = file.readlines()
         for keyword in keywords:
-            Evaluator.function_names.append(keyword.rstrip())
+            Interpreter.function_names.append(keyword.rstrip())
         return False
 
     @staticmethod
@@ -623,9 +648,9 @@ class Evaluator:
             return ')'
         elif token == ',':
             return ','
-        elif token in Evaluator.function_names:
+        elif token in Interpreter.function_names:
             return 'Fun'
-        elif token in Evaluator.operators:
+        elif token in Interpreter.operators:
             return 'Op'
         elif token.lower() in null:
             return 'V'
@@ -633,7 +658,7 @@ class Evaluator:
             return 'Boolean'
         elif (len(token) >= 2) and ((token[0] in quote_chars) and (token[len(token) - 1] in quote_chars)):
             return 'Str'
-        elif Evaluator.is_number(token):
+        elif Interpreter.is_number(token):
             return 'Num'
         elif token == '\t':
             return 'Tab'
@@ -685,21 +710,21 @@ class Evaluator:
             if len(parameters) == 1 and isinstance(parameters[0],list):
                 # add all the items in a single list together
                 params = parameters[0]
-                return Evaluator.evaluateFunction("SUM",params)
-            if Evaluator.checkAllTypes(parameters, [list]):
+                return Interpreter.evaluateFunction("SUM", params)
+            if Interpreter.checkAllTypes(parameters, [list]):
                 # merge multiple lists together
                 returnlist = []
                 for param in parameters:
                     returnlist.extend(param)
                 return returnlist
-            elif Evaluator.checkAllTypes(parameters, [int,float]):
+            elif Interpreter.checkAllTypes(parameters, [int, float]):
                 # Add numbers
                 result = 0
                 if len(parameters) >= 1:
                     for param in parameters:
                         result += param
                 return result
-            elif Evaluator.checkAllTypes(parameters, [int,float,str]):
+            elif Interpreter.checkAllTypes(parameters, [int, float, str]):
                 # A mix will produce a string
                 result = ""
                 if len(parameters) >= 1:
@@ -711,7 +736,7 @@ class Evaluator:
 
         if function in ["-", "SUBTRACT"]:
             if len(parameters) == 2:
-                if Evaluator.checkAllTypes(parameters,  [int,float]):
+                if Interpreter.checkAllTypes(parameters, [int, float]):
                     return float(parameters[0]) - float(parameters[1])
                 else:
                     raise Exception("Unexpected parameters given")
@@ -720,7 +745,7 @@ class Evaluator:
 
         if function in ["*", "MULTIPLY"]:
             if len(parameters) == 2:
-                if Evaluator.checkAllTypes(parameters, [int,float]):
+                if Interpreter.checkAllTypes(parameters, [int, float]):
                     return ["Num", float(parameters[0]) * float(parameters[1])]
                 else:
                     raise Exception("Unexpected parameters given")
@@ -729,7 +754,7 @@ class Evaluator:
 
         if function in ["/", "DIVIDE"]:
             if len(parameters) == 2:
-                if Evaluator.checkAllTypes(parameters,  [int,float]):
+                if Interpreter.checkAllTypes(parameters, [int, float]):
                     return float(parameters[0]) / float(parameters[1])
                 else:
                     raise Exception("Unexpected parameters given")
@@ -738,7 +763,7 @@ class Evaluator:
 
         if function in ["%", "MOD"]:
             if len(parameters) == 2:
-                if Evaluator.checkAllTypes(parameters,  [int,float]):
+                if Interpreter.checkAllTypes(parameters, [int, float]):
                     return float(parameters[0]) % float(parameters[1])
                 else:
                     raise Exception("Unexpected parameters given")
@@ -747,7 +772,7 @@ class Evaluator:
 
         if function in ["ABS"]:
             if len(parameters) == 1:
-                if Evaluator.checkAllTypes(parameters,  [int,float]):
+                if Interpreter.checkAllTypes(parameters, [int, float]):
                     return abs(float(parameters[0]))
                 else:
                     raise Exception("Unexpected parameters given")
@@ -756,7 +781,7 @@ class Evaluator:
 
         if function in ["SQRT"]:
             if len(parameters) == 1:
-                if Evaluator.checkAllTypes(parameters,  [int,float]):
+                if Interpreter.checkAllTypes(parameters, [int, float]):
                     result = parameters[0] ** (1.0 / 2) #raise the power of parameter to 1/2, giving square root
                     return result
                 else:
@@ -784,7 +809,7 @@ class Evaluator:
 
         if function in ["&&","AND"]:
             if len(parameters) >= 2:
-                if Evaluator.checkAllTypes(parameters,  [bool]):
+                if Interpreter.checkAllTypes(parameters, [bool]):
                     for param in parameters:
                         if not param:
                             return False
@@ -796,7 +821,7 @@ class Evaluator:
 
         if function in ["||","OR"]:
             if len(parameters) >= 2:
-                if Evaluator.checkAllTypes(parameters,  [bool]):
+                if Interpreter.checkAllTypes(parameters, [bool]):
                     for param in parameters:
                         if param:
                             return True
@@ -808,7 +833,7 @@ class Evaluator:
 
         if function == "XOR":
             if len(parameters) >= 2:
-                if Evaluator.checkAllTypes(paramtypes,  ['Boolean']):
+                if Interpreter.checkAllTypes(paramtypes, ['Boolean']):
                     truecount = 0
                     for param in parameters:
                         if param.lower() == 'true':
@@ -823,7 +848,7 @@ class Evaluator:
 
         if function == "XNOR":
             if len(parameters) >= 2:
-                if Evaluator.checkAllTypes(paramtypes,  ['Boolean']):
+                if Interpreter.checkAllTypes(paramtypes, ['Boolean']):
                     truecount = 0
                     for param in parameters:
                         if param.lower() == 'true':
@@ -839,7 +864,7 @@ class Evaluator:
         if function in ["==","EQ"]:
             # Equals function
             if len(parameters) >= 2:
-                if not Evaluator.checkAllTypes(parameters,  [list]):
+                if not Interpreter.checkAllTypes(parameters, [list]):
                     for index in range(1,len(parameters)):
                         if parameters[index] != parameters[0]:
                             return False
@@ -852,7 +877,7 @@ class Evaluator:
         if function in ["!=","NEQ"]:
             # Not Equals function. All items must by unique values to return true
             if len(parameters) >= 2:
-                if not Evaluator.checkAllTypes(parameters,  [list]):
+                if not Interpreter.checkAllTypes(parameters, [list]):
                     itemset = []    #set of all unique items
                     for param in parameters:
                         if param in itemset:
@@ -867,7 +892,7 @@ class Evaluator:
         if function in [">=","GTEQ"]:
             # Greater than. Will return false if items are not sorted in descending order
             if len(parameters) >= 2:
-                if Evaluator.checkAllTypes(paramtypes,  ['Num']):
+                if Interpreter.checkAllTypes(paramtypes, ['Num']):
                     for index in range(1,len(parameters)):
                         if parameters[index-1] <= parameters[index]:
                             return ["Boolean", 'false']
@@ -880,7 +905,7 @@ class Evaluator:
         if function in ["<=","LTEQ"]:
             # Greater than. Will return false if items are not sorted in descending order
             if len(parameters) >= 2:
-                if Evaluator.checkAllTypes(paramtypes,  ['Num']):
+                if Interpreter.checkAllTypes(paramtypes, ['Num']):
                     for index in range(1,len(parameters)):
                         if parameters[index-1] >= parameters[index]:
                             return ["Boolean", 'false']
@@ -893,7 +918,7 @@ class Evaluator:
         if function in [">","GT"]:
             # Greater than. Will return false if items are not sorted in descending order
             if len(parameters) >= 2:
-                if Evaluator.checkAllTypes(paramtypes,  ['Num']):
+                if Interpreter.checkAllTypes(paramtypes, ['Num']):
                     for index in range(1,len(parameters)):
                         if parameters[index-1] < parameters[index]:
                             return ["Boolean", 'false']
@@ -906,7 +931,7 @@ class Evaluator:
         if function in ["<","LT"]:
             # Greater than. Will return false if items are not sorted in descending order
             if len(parameters) >= 2:
-                if Evaluator.checkAllTypes(parameters,  [int,float]):
+                if Interpreter.checkAllTypes(parameters, [int, float]):
                     for index in range(1,len(parameters)):
                         if parameters[index-1] > parameters[index]:
                             return False
@@ -918,7 +943,7 @@ class Evaluator:
 
         if function in ["SORT"]:
             # Returns a sorted list
-            if Evaluator.checkAllTypes(parameters,  [str,int,float]):
+            if Interpreter.checkAllTypes(parameters, [str, int, float]):
                 numlist = []
                 strlist = []
                 for index in range(0,len(parameters)):
@@ -937,15 +962,15 @@ class Evaluator:
 
         if function in ["LEVEN"]:
             if len(parameters) == 2:
-                if Evaluator.checkAllTypes(parameters,  [str]):
-                    return Evaluator.levenshtein(parameters[0],parameters[1])
+                if Interpreter.checkAllTypes(parameters, [str]):
+                    return Interpreter.levenshtein(parameters[0], parameters[1])
                 else:
                     raise Exception("Unexpected parameters given")
             else:
                 raise Exception("2 Parameters Expected")
 
         if function in ["AVG"]:
-            if Evaluator.checkAllTypes(parameters,  [int,float]):
+            if Interpreter.checkAllTypes(parameters, [int, float]):
                 if len(parameters) > 0:
                     sum = 0
                     result = 0
@@ -960,7 +985,7 @@ class Evaluator:
 
         if function in ["RANDOM"]:
             # Returns random float between 0 and x, or in range if two numbers given
-            if Evaluator.checkAllTypes(parameters, [int,float]):
+            if Interpreter.checkAllTypes(parameters, [int, float]):
                 if len(parameters) == 2:
                         return random.uniform(parameters[0],parameters[1])
                 if len(parameters) == 1:
@@ -971,7 +996,7 @@ class Evaluator:
 
         if function in ["RANDOMINT"]:
             # Returns random int between 0 and x, or in range if two numbers given
-            if Evaluator.checkAllTypes(parameters, [int, float]):
+            if Interpreter.checkAllTypes(parameters, [int, float]):
                 if len(parameters) == 2:
                     return int(random.uniform(parameters[0], parameters[1]))
                 if len(parameters) == 1:
@@ -1011,7 +1036,7 @@ class Evaluator:
             return None
 
         if function in ["ADDNODES"]:
-            if not Evaluator.checkAllTypes(parameters,[str]):
+            if not Interpreter.checkAllTypes(parameters, [str]):
                 raise Exception("Only strings can be added as node keys")
             for param in parameters:
                 Supergraph.addNode(param)
@@ -1020,7 +1045,7 @@ class Evaluator:
         if function in ["GETNODES"]:
             # converts a list of names into a nodelist,  removing ones that don't exist in the supergraph
             if len(parameters) > 1:
-                if Evaluator.checkAllTypes(parameters, [str]):
+                if Interpreter.checkAllTypes(parameters, [str]):
                     nodekeys = Supergraph.verifyNodeNames(parameters)
                     return nodekeys
                 raise Exception("Unexpected parameters given")
@@ -1030,7 +1055,7 @@ class Evaluator:
 
         if function == "REMOVENODES":
             if len(parameters) > 1:
-                if Evaluator.checkAllTypes(parameters, [str]):
+                if Interpreter.checkAllTypes(parameters, [str]):
                     Supergraph.removeNodes(Supergraph.verifyNodeNames(parameters))
                     return None
                 raise Exception("Unexpected parameters given")
@@ -1050,7 +1075,7 @@ class Evaluator:
             if len(parameters) == 3:
                 # nodenames(L),  varname,  vardata
                 if isinstance(parameters[0],list) and isinstance(parameters[1],str):
-                    if Evaluator.checkAllTypes(parameters[0],[str]):
+                    if Interpreter.checkAllTypes(parameters[0], [str]):
                         Supergraph.addNodeData(parameters[0], parameters[1], parameters[2])
                         return None
                     else:
@@ -1065,7 +1090,7 @@ class Evaluator:
                 # nodenames,  varname
                 if isinstance(parameters[0], list) and isinstance(parameters[1],str):
                     # print Supergraph.verifyNodeNames(parameters[0])
-                    if Evaluator.checkAllTypes(parameters[0], [str]):
+                    if Interpreter.checkAllTypes(parameters[0], [str]):
                         Supergraph.removeNodeData(parameters[0], parameters[1])
                         return None
                 raise Exception("Unexpected parameters given")
@@ -1076,7 +1101,7 @@ class Evaluator:
             if len(parameters) == 2:
                 # nodenames,  varname
                 if isinstance(parameters[0], list) and isinstance(parameters[1], str):
-                    if Evaluator.checkAllTypes(parameters[0], [str]):
+                    if Interpreter.checkAllTypes(parameters[0], [str]):
                         returnlist = Supergraph.getNodeData(parameters[0], parameters[1])
                         return returnlist
                 raise Exception("Unexpected parameters given")
@@ -1112,7 +1137,7 @@ class Evaluator:
         if function in ["GETCONNECTIONS"]:
             # converts a list of names into a connectionlist,  removing ones that don't exist in the supergraph
             if len(parameters) > 1:
-                if Evaluator.checkAllTypes(parameters, [str]):
+                if Interpreter.checkAllTypes(parameters, [str]):
                     connectionkeys = Supergraph.verifyConnectionNames(parameters)
                     return connectionkeys
                 raise Exception("Unexpected parameters given")
@@ -1122,12 +1147,12 @@ class Evaluator:
 
         if function in ["REMOVECONNECTIONS"]:
             if len(parameters) == 1 and isinstance(parameters[0],list):
-                if Evaluator.checkAllTypes(parameters[0], [str]):
+                if Interpreter.checkAllTypes(parameters[0], [str]):
                     Supergraph.removeConnections(Supergraph.verifyConnectionNames( parameters[0]))
                     return None
                 raise Exception("Unexpected parameters given")
             elif len(parameters) >= 1:
-                if Evaluator.checkAllTypes(parameters, [str]):
+                if Interpreter.checkAllTypes(parameters, [str]):
                     Supergraph.removeConnections(Supergraph.verifyConnectionNames( parameters))
                     return None
                 raise Exception("Unexpected parameters given")
@@ -1141,7 +1166,7 @@ class Evaluator:
             if len(parameters) == 3:
                 # connectionnames(L),  varname,  vardata
                 if isinstance(parameters[0],list) and isinstance(parameters[1],str):
-                    if Evaluator.checkAllTypes(parameters[0],[str]):
+                    if Interpreter.checkAllTypes(parameters[0], [str]):
                         Supergraph.addConnectionData(parameters[0], parameters[1], parameters[2])
                         return None
                     else:
@@ -1155,7 +1180,7 @@ class Evaluator:
             if len(parameters) == 2:
                 # connectionnames,  varname
                 if isinstance(parameters[0],list) and isinstance(parameters[1],str):
-                    if Evaluator.checkAllTypes(parameters[0], [str]):
+                    if Interpreter.checkAllTypes(parameters[0], [str]):
                         Supergraph.removeConnectionData(parameters[0], parameters[1])
                         return None
                 raise Exception("Unexpected parameters given")
@@ -1166,7 +1191,7 @@ class Evaluator:
             if len(parameters) == 2:
                 # connectionnames,  varname
                 if isinstance(parameters[0], list) and isinstance(parameters[1], str):
-                    if Evaluator.checkAllTypes(parameters[0], [str]):
+                    if Interpreter.checkAllTypes(parameters[0], [str]):
                         return Supergraph.getConnectionData(parameters[0], parameters[1])
                 raise Exception("Unexpected parameters given")
             else:
@@ -1179,7 +1204,7 @@ class Evaluator:
             return None
 
         if function in ["ADDGRAPHS"]:
-            if Evaluator.checkAllTypes(parameters,[str]):
+            if Interpreter.checkAllTypes(parameters, [str]):
                 for param in parameters:
                     Supergraph.addGraph(param)
             else:
@@ -1189,7 +1214,7 @@ class Evaluator:
         if function in ["GETGRAPHS"]:
             # converts a list of names into a graphlist,  removing ones that don't exist in the supergraph
             if len(parameters) > 1:
-                if Evaluator.checkAllTypes(parameters, [str]):
+                if Interpreter.checkAllTypes(parameters, [str]):
                     return Supergraph.verifyGraphNames(parameters)
                 else:
                     raise Exception("Unexpected parameters given")
@@ -1198,7 +1223,7 @@ class Evaluator:
         
         if function in ["REMOVEGRAPHS"]:
             if len(parameters) >= 1:
-                if Evaluator.checkAllTypes(parameters, [str]):
+                if Interpreter.checkAllTypes(parameters, [str]):
                     Supergraph.removeGraphs(Supergraph.verifyGraphNames(parameters))
                     return None
                 else:
@@ -1213,11 +1238,11 @@ class Evaluator:
             if len(parameters) == 2:
                 # object list(L), query expression(Str)
                 if isinstance(parameters[0], list) and isinstance(parameters[1], str):
-                    if Evaluator.checkAllTypes(parameters[0], [str]):
+                    if Interpreter.checkAllTypes(parameters[0], [str]):
                         returnlist = [] # Maintains list of keys that satisfied query
                         # iterate through items in key list
                         for queryitem in parameters[0]:
-                            result = Evaluator.evaluateExpression(parameters[1],queryitem)
+                            result = Interpreter.evaluateExpression(parameters[1], queryitem)
                             if result == [[True]]:
                                 returnlist.append(queryitem)
                         return returnlist
@@ -1234,9 +1259,9 @@ class Evaluator:
         # Evaluates an expression. Tokenizes it, then evaluates the tokens
         # this variables references what the keyword THIS references in the supergraph
         print "EXPRESSION: "+expression
-        tokenlist = Evaluator.tokenizeExpressionRegex(expression)
+        tokenlist = Interpreter.tokenizeExpression(expression)
         #print tokenlist
-        return Evaluator.evaluateTokens(tokenlist, this)
+        return Interpreter.evaluateTokens(tokenlist, this)
 
     @staticmethod
     def evaluateTokens(tokenlist, this = ""):
@@ -1259,7 +1284,7 @@ class Evaluator:
         # run through each token and evaluate expression
         for token in tokenlist:
             # get the category of the current token to determine what to do
-            category = Evaluator.categorizeToken(token)
+            category = Interpreter.categorizeToken(token)
             # print category
 
             if category == '(':
@@ -1293,7 +1318,7 @@ class Evaluator:
                     # check if function and current parameter heights match up
                     if opHeight[-1] == paramHeights[-1]:
                         # Evaluate result of function call
-                        result = Evaluator.evaluateFunction(opStack[-1], paramStack[-1])
+                        result = Interpreter.evaluateFunction(opStack[-1], paramStack[-1])
                         #print("result: ", result)
 
                         # Add results to stacks
@@ -1361,7 +1386,7 @@ class Evaluator:
                             rightparam = paramStack[-1].pop()
                             leftparam = paramStack[-1].pop()
                             # Evaluate the binary operator
-                            result = Evaluator.evaluateFunction(opStack[-1], [leftparam, rightparam])
+                            result = Interpreter.evaluateFunction(opStack[-1], [leftparam, rightparam])
                             #print("result: ", result)
 
                             # put results in stacks
@@ -1377,7 +1402,7 @@ class Evaluator:
                             # get topmost parameter
                             rightparam = paramStack[-1].pop()
                             # Negate the value
-                            result = Evaluator.evaluateFunction(opStack[-1], [0, rightparam])
+                            result = Interpreter.evaluateFunction(opStack[-1], [0, rightparam])
 
                             # put results in stacks
                             paramStack[-1].append(result)
@@ -1387,13 +1412,13 @@ class Evaluator:
                             opStack.pop()
             previous_category = category
 
-        print 'END OF EVALUATION PARAMETERS: ',paramStack
+        #print 'END OF EVALUATION PARAMETERS: ',paramStack
 
         if len(paramStack) == 1:
             return paramStack
 
     @staticmethod
-    def tokenizeExpressionRegex(expression):
+    def tokenizeExpression(expression):
         # Improved algorithm for tokenizing a math expression
 
         is_quoted = False
@@ -1456,16 +1481,14 @@ class Evaluator:
     def checkTokenLegality(token):
         # returns True if token is not a keyword used by database
         assert type(token) is str
-        if token in Evaluator.function_names:
+        if token in Interpreter.function_names:
             return False
-        if token in Evaluator.operators:
+        if token in Interpreter.operators:
             return False
-        for illegal_char in Evaluator.reserved_chars:
+        for illegal_char in Interpreter.reserved_chars:
             if illegal_char in token:
                 return False
         return True
-
-
 
 class FileHandler:
     @staticmethod
@@ -1491,13 +1514,13 @@ class FileHandler:
 
         # write nodes to file
         for node in n_list:
+            print("node:\t",json.dumps(str(node)))
+
             data = node.nodedata  # pull data from node
             fname.write("\n" + node.name)  # write node name
             for d in data.keys():  # write node data
-                if node.getNodeData(d)[0] != 'L':
-                    value_type = node.getNodeData(d)[0]
-                    value = node.getNodeData(d)[1]
-                    fname.write(data_seperator + d + value_seperator + str(value) + value_seperator + value_type)
+                value = node.getNodeData(d)
+                fname.write(data_seperator + d + value_seperator + str(value))
 
                     # print(d,data[d])
         fname.write("\n")
@@ -1506,10 +1529,8 @@ class FileHandler:
             data = con.connectiondata  # pull data from node
             fname.write("\n" + con.name + value_seperator + con.leftkey + value_seperator + con.rightkey)  # write node name
             for d in data.keys():  # write connection data
-                if con.getConnectionData(d)[0] != 'L':
-                    value_type = con.getConnectionData(d)[0]
-                    value = con.getConnectionData(d)[1]
-                    fname.write(data_seperator + d + value_seperator + str(value) + value_seperator + value_type)
+                value = con.getConnectionData(d)
+                fname.write(data_seperator + d + value_seperator + str(value))
 
         fname.close()
 
@@ -1538,6 +1559,7 @@ class FileHandler:
         line = fname.readline().rstrip()    # read in first line
         while line != "":   # read nodes until an empty line is detected
             print(line)
+
             node_name = None
             data = line.split(data_seperator)
             for data_index in range(0,len(data)):
@@ -1546,16 +1568,15 @@ class FileHandler:
                     # first section; should just be the node name and nothing else
                     assert len(values) == 1 #there should just be the node name
                     node_name = str(values[0])
-                    assert Evaluator.checkTokenLegality(node_name)  # node should not be illegal to use
+                    assert Interpreter.checkTokenLegality(node_name)  # node should not be illegal to use
                     Supergraph.addNode(node_name)
                 else:
                     # data section. Should be triples in the form of varname, varvalue, vartype
-                    assert len(values) == 3  # there should be 3 items
+                    assert len(values) == 2  # there should be 3 items
                     varname = values[0]
                     varvalue = values[1]
-                    vartype = values[2]
 
-                    Supergraph.addNodeData([node_name],varname,varvalue,vartype)
+                    Supergraph.addNodeData([node_name],varname,varvalue)
 
                     #TODO: ADD IN LIST HANDLING
 
@@ -1579,18 +1600,17 @@ class FileHandler:
                     leftkey = str(values[1])
                     rightkey = str(values[2])
 
-                    assert Evaluator.checkTokenLegality(con_name)  # connection should not be illegal to use
-                    assert Evaluator.checkTokenLegality(leftkey)  # left key should not be illegal to use
-                    assert Evaluator.checkTokenLegality(rightkey)  # right key should not be illegal to use
+                    assert Interpreter.checkTokenLegality(con_name)  # connection should not be illegal to use
+                    assert Interpreter.checkTokenLegality(leftkey)  # left key should not be illegal to use
+                    assert Interpreter.checkTokenLegality(rightkey)  # right key should not be illegal to use
                     Supergraph.addConnection(con_name, leftkey, rightkey)
                 else:
-                    # data section. Should be triples in the form of varname, varvalue, vartype
-                    assert len(values) == 3  # there should be 3 items
+                    # data section. Should be pairs in the form of varname, varvalue
+                    assert len(values) == 2  # there should be 3 items
                     varname = values[0]
                     varvalue = values[1]
-                    vartype = values[2]
                     # add data to connection
-                    Supergraph.addConnectionData([con_name], varname, varvalue, vartype)
+                    Supergraph.addConnectionData([con_name], varname, varvalue)
 
             line = fname.readline().rstrip()  # get next line
             #TODO: ADD IN LIST HANDLING
@@ -1601,16 +1621,17 @@ import time # used for getting unix time
 import Queue    # used for priority queues
 import re       # regex library
 import random   # used for random functions
+import json
 
 file = open('script.txt', 'r')
 x = file.readlines()
 for i in x:
-    Evaluator.evaluateExpression(i.rstrip())
+    Interpreter.evaluateExpression(i.rstrip())
     #except Exception,e:
         #print("\n\n\n"+str(e)+"\n\n\n")
 
 # print("writing to file")
-# FileHandler.writeGraphFile("testfile.txt",1.00,"|||","::",Supergraph.nodelist.keys(),Supergraph.connectionlist.keys())
+FileHandler.writeGraphFile("testfile.txt",1.00,"|||","::",Supergraph.nodelist.keys(),Supergraph.connectionlist.keys())
 # print("removing everything")
 # Supergraph.removeNodes(Supergraph.getAllNodeKeys())
 # Supergraph.removeConnections(Supergraph.getAllConnectionKeys())
@@ -1621,7 +1642,7 @@ FileHandler.readGraphFile("testfile.txt")
 # print "nodes: ",Supergraph.getAllNodeKeys()
 # print "connections: ",Supergraph.getAllConnectionKeys()
 
-ArtPointsFinder.getArtPoints(Supergraph.getAllNodeKeys(),Supergraph.connectionlist)
+#ArtPointsFinder.getArtPoints(Supergraph.getAllNodeKeys(),Supergraph.connectionlist)
 #                      __
 #         _______     /*_)-< HISS HISS
 #   ___ /  _____  \__/ /
