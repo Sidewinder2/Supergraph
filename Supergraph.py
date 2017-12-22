@@ -1,3 +1,41 @@
+class Configurations:
+    config_values = {}  # dictionary containing all configs
+    DEFAULT_CONFIG_FNAME = "config.txt" # default congig filename
+
+    @staticmethod
+    def setRuntimeConfigs(filename = DEFAULT_CONFIG_FNAME):
+        # sets all hardcoded values in DEFAULT_CONFIG_VALUES
+        # if the designated config file is not detected, create one
+        # and populate with default configs
+        # If it exists, read from it
+
+        Configurations.config_values["runtimescript"] = "script.txt"
+        Configurations.loadConfigFile(filename)
+        Configurations.writeConfigFile(filename)
+
+    @staticmethod
+    def loadConfigFile(filename = DEFAULT_CONFIG_FNAME):
+        # loads configs from given file, if it exists
+        import os.path
+        if os.path.exists(filename):
+            file = open(filename, 'r')
+            lines = file.readlines()
+            for line in lines:
+                keyvalue = line.split(" = ")
+                if len(keyvalue) == 2 and keyvalue[0] in Configurations.config_values.keys():
+                    # TODO use multiple data types instead of string
+                    Configurations.config_values[keyvalue[0]] = keyvalue[1]
+            file.close()
+
+
+    @staticmethod
+    def writeConfigFile(filename=DEFAULT_CONFIG_FNAME):
+        # writes current configs to given file
+        file = open(filename, "w")
+        for key in Configurations.config_values:
+            file.write(key + " = " +str(Configurations.config_values[key]))
+        file.close()
+
 class KeyGenerator:
     # Generator class that keeps track of automatic namings
     # For instance, creates "Connection1","Connection2".... given "Connection" as a starting string
@@ -464,7 +502,6 @@ class Connection:
                 return self.rightkey
             else:
                 return None
-
 
 class ArtPointsFinder:
     # Todo: Implement ArtPointsFinder
@@ -1623,7 +1660,9 @@ import re       # regex library
 import random   # used for random functions
 import json
 
-file = open('script.txt', 'r')
+Configurations.setRuntimeConfigs()
+
+file = open(Configurations.config_values["runtimescript"], 'r')
 x = file.readlines()
 for i in x:
     Interpreter.evaluateExpression(i.rstrip())
@@ -1631,6 +1670,8 @@ for i in x:
         #print("\n\n\n"+str(e)+"\n\n\n")
 
 # print("writing to file")
+
+
 FileHandler.writeGraphFile("testfile.txt",1.00,"|||","::",Supergraph.nodelist.keys(),Supergraph.connectionlist.keys())
 # print("removing everything")
 # Supergraph.removeNodes(Supergraph.getAllNodeKeys())
