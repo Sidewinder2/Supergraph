@@ -264,7 +264,7 @@ class Supergraph:
             Node.removeNodeData(nodes[node],  varname)
 
     @staticmethod
-    def addConnection( connectionname,  leftname,  rightname):
+    def addConnection( connectionname,  leftname,  rightname, direction = "both"):
         # creates a connection in the database. Returns true if successful, false if not
 
         assert type(connectionname) is str
@@ -278,7 +278,7 @@ class Supergraph:
             return False
 
         if connectionname not in Supergraph.connectionlist:
-            Supergraph.connectionlist[connectionname] = Connection(connectionname, leftname,  rightname)
+            Supergraph.connectionlist[connectionname] = Connection(connectionname, leftname,  rightname, direction)
             Supergraph.nodeconnectionlist[leftname].add(connectionname)
             Supergraph.nodeconnectionlist[rightname].add(connectionname)
             Supergraph.keylist.append(connectionname)
@@ -286,7 +286,7 @@ class Supergraph:
         return False
 
     @staticmethod
-    def addConnections( leftnames,  rightnames, generator = "Connection"):
+    def addConnections( leftnames,  rightnames, direction = 'both', generator = "Connection"):
         # Adds connections to the database
         # Will connect every node from left side to right side,  resulting in L * R connections
         verifiedleftnames = Supergraph.verifyNodeNames(leftnames)
@@ -610,7 +610,7 @@ class Interpreter:
                       'ADDCONNECTIONDATA', 'GETCONNECTIONDATA', 'REMOVECONNECTIONDATA',
                       'LISTGRAPHS', 'ADDGRAPHS', 'GETGRAPHS', 'REMOVEGRAPHS',
                       'QUERY']
-    operators = ['-', '+', '/', '*', '%', '==', '!=', '>', '<', '>=', '<=', '||', '&&']
+    operators = ['<-->','-->','-', '+', '/', '*', '%', '==', '!=', '>', '<', '>=', '<=', '||', '&&']
     reserved_chars = ['(', ')', '#', '"', "'", '\\', '\t', ',']   # these characters cannot be used in an object name
 
 
@@ -1151,8 +1151,8 @@ class Interpreter:
             Supergraph.printConnectionList()
             return None
 
-        if function == "ADDCONNECTIONS":
-            if len(parameters) == 2:
+        if function in ['-->','<-->',"ADDCONNECTIONS"]:
+            if len(parameters) in [2,3]:
                 # ADDCONNECTIONS(leftnodes, rightnodes)
                 # Get initial left and right keys
                 # They're treated as lists even if they might be one item
@@ -1165,7 +1165,14 @@ class Interpreter:
                 if isinstance(parameters[1],list):
                     rightkeys = parameters[1]
 
-                Supergraph.addConnections(leftkeys, rightkeys)
+                # get the direction of the connections
+                con_direction = "both"
+                if function == '-->':
+                    con_direction = "left"
+                if len(parameters) == 3:
+                    con_direction = parameters[2]
+
+                Supergraph.addConnections(leftkeys, rightkeys,con_direction)
                 return None
             else:
                 raise Exception("Unexpected parameters given")
@@ -1465,7 +1472,7 @@ class Interpreter:
         comment_substring = '#'
         tab = '\t'
 
-        regstring = '(\*|/|\+|\-|\(|\)|%|==|!=|>=|<=|>|<|&&|\\|\\||in|,|"|\'|#|\\\\'+"|"+tab+"|"+comment_substring + ")"
+        regstring = '(<-->|-->|\*|/|\+|\-|\(|\)|%|==|!=|>=|<=|>|<|&&|\\|\\||in|,|"|\'|#|\\\\'+"|"+tab+"|"+comment_substring + ")"
         initial_tokens = re.split(regstring, expression)    # tokenize the expression initially
         final_tokens = []   # final token list
 
