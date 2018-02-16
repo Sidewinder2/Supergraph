@@ -1,6 +1,6 @@
 class Configurations:
     config_values = {}  # dictionary containing all configs
-    DEFAULT_CONFIG_FNAME = "config.txt" # default congig filename
+    DEFAULT_CONFIG_FNAME = "config.json" # default congig filename
 
     @staticmethod
     def setRuntimeConfigs(filename = DEFAULT_CONFIG_FNAME):
@@ -18,23 +18,15 @@ class Configurations:
         # loads configs from given file, if it exists
         import os.path
         if os.path.exists(filename):
-            file = open(filename, 'r')
-            lines = file.readlines()
-            for line in lines:
-                keyvalue = line.split(" = ")
-                if len(keyvalue) == 2 and keyvalue[0] in Configurations.config_values.keys():
-                    # TODO use multiple data types instead of string
-                    Configurations.config_values[keyvalue[0]] = keyvalue[1]
-            file.close()
+            with open(filename, 'r') as infile:
+                Configurations.config_values = json.load(infile)
 
 
     @staticmethod
     def writeConfigFile(filename=DEFAULT_CONFIG_FNAME):
         # writes current configs to given file
-        file = open(filename, "w")
-        for key in Configurations.config_values:
-            file.write(key + " = " +str(Configurations.config_values[key]))
-        file.close()
+        with open(filename, 'w') as outfile:
+            json.dump(Configurations.config_values, outfile, indent=4, sort_keys=True)
 
 class KeyGenerator:
     # Generator class that keeps track of automatic namings
@@ -460,26 +452,20 @@ class Node:
             del self.nodedata[varname]
 
 class Connection:
-    def __init__(self, name, leftkey, rightkey, direction = "both"):
+    def __init__(self, name, leftkey, rightkey,
+                 direction = "both"): # The endpoint of the connection. Either left for directed, or both for undirected.
         self.name = name   # unique name of the connection used as a key
-        self.leftkey = leftkey     # name of left node
-        self.rightkey = rightkey    #  name of left node
-        self.connectiondata = {}    # maintains additional information about the connection
         assert direction in ['left','both']
-        self.direction = direction     # The endpoint of the connection. Either left for directed, or both for undirected.
+        self.connectiondata = {"leftkey": leftkey, "rightkey":rightkey,"direction":direction}  # maintains information about the connection
 
     def addConnectionData(self,  varname,  vardata):
-        if varname.lower() != "name":
+        if varname.lower() not in ["name","leftname","rightname","direction"]:
             self.connectiondata[varname] = vardata
 
     def getConnectionData(self,  varname):
         # gets type and value of requested variable,  none if it doesn't exist
         if varname in self.connectiondata:
             return self.connectiondata[varname]
-        if varname.lower() == "leftname":
-            return self.leftkey
-        if varname.lower() == "rightname":
-            return self.rightkey
         if varname.lower() == "name":
             return self.name
         return None
@@ -491,15 +477,15 @@ class Connection:
     def getEndPoint(self,startpoint):
         # Used to traverse a connection, given the start point
         # If you attempt to go the opposite way from a directed edge, it returns None
-        assert startpoint in [self.leftkey,self.rightkey]
-        if self.direction == "both":
-            if startpoint == self.leftkey:
-                return self.rightkey
+        assert startpoint in [self.connectiondata["leftkey"],self.connectiondata["rightkey"]]
+        if self.connectiondata["direction"] == "both":
+            if startpoint == self.connectiondata["leftkey"]:
+                return self.connectiondata["rightkey"]
             else:
-                return self.leftkey
+                return self.connectiondata["leftkey"]
         else:
-            if startpoint == self.leftkey:
-                return self.rightkey
+            if startpoint == self.connectiondata["leftkey"]:
+                return self.connectiondata["rightkey"]
             else:
                 return None
 
@@ -1535,131 +1521,43 @@ class Interpreter:
         return True
 
 class FileHandler:
-    @staticmethod
-    def writeGraphFile(filename="", version_num=1.00, data_seperator="|||", value_seperator="::",
-                       nodekeys= [], connectionkeys= [], graphkeys= []):
-        # writes a list of nodes, edges, graphs, and their associated data to a file
-
-        # throw error if file version doesn't exist or seperators
-        assert version_num in [1.00]
-        assert len(data_seperator) > 0
-        assert len(value_seperator) > 0
-
-        # open file and write first three lines
-        fname = open(filename, "w")
-        fname.write(str(version_num))
-        fname.write("\n" + data_seperator)
-        fname.write("\n" + value_seperator)
-
-        # convert keys to pointers
-        n_list = Supergraph.namesToNodes(nodekeys)
-        c_list = Supergraph.namesToConnections(connectionkeys)
-        g_list = Supergraph.namesToGraphs(graphkeys)
-
-        # write nodes to file
-        for node in n_list:
-            print("node:\t",json.dumps(str(node)))
-
-            data = node.nodedata  # pull data from node
-            fname.write("\n" + node.name)  # write node name
-            for d in data.keys():  # write node data
-                value = node.getNodeData(d)
-                fname.write(data_seperator + d + value_seperator + str(value))
-
-                    # print(d,data[d])
-        fname.write("\n")
-
-        for con in c_list:
-            data = con.connectiondata  # pull data from node
-            fname.write("\n" + con.name + value_seperator + con.leftkey + value_seperator + con.rightkey)  # write node name
-            for d in data.keys():  # write connection data
-                value = con.getConnectionData(d)
-                fname.write(data_seperator + d + value_seperator + str(value))
-
-        fname.close()
 
     @staticmethod
-    def readGraphFile(filename="", conflict_handling = "overwrite"):
-        # conflict handling:
-        #   overwrite: overwrites all data if conflict is found
-        #   ignore-attribute: Only adds data if it doesn't exist, ignoring pre-existing attributes
-        #   ignore-row: Skips row if conflict found
-        #   ignore-all: Reads file once to find conflicts, then ignores file if any found
+    def writeGraphFileJSON(filename="", version_num=1.00,
+                       nodekeys=[], connectionkeys=[], graphkeys=[]):
 
-        print("READING FILE:    " +filename+"...")
-        fname = open(filename, "r")
+        json_dict = {}
+        json_dict["Nodes"] = {}
+        json_dict["Connections"] = {}
+        json_dict["Graphs"] = {}
 
-        version_num = fname.readline().rstrip()
-        data_seperator = fname.readline().rstrip()  # data seperator seperates the list of key:value pairs
-        value_seperator = fname.readline().rstrip() # value seperator seperates the keys from the values
+        nodes = Supergraph.namesToNodes(nodekeys)
 
-        assert version_num in ["1.0"]   # make sure version used is compliant
-        assert data_seperator != "" # make sure an actual string is used for splitting
-        assert value_seperator != data_seperator    # data and value seperators can't be the same
-        assert value_seperator != ""
+        for node in nodes:
+            json_dict["Nodes"][node.name] = node.nodedata
 
-        print("READING NODES...")
+        connections = Supergraph.namesToConnections(connectionkeys)
 
-        line = fname.readline().rstrip()    # read in first line
-        while line != "":   # read nodes until an empty line is detected
-            print(line)
+        for conn in connections:
+            json_dict["Connections"][conn.name] = conn.connectiondata
 
-            node_name = None
-            data = line.split(data_seperator)
-            for data_index in range(0,len(data)):
-                values = data[data_index].split(value_seperator)
-                if data_index == 0:
-                    # first section; should just be the node name and nothing else
-                    assert len(values) == 1 #there should just be the node name
-                    node_name = str(values[0])
-                    assert Interpreter.checkTokenLegality(node_name)  # node should not be illegal to use
-                    Supergraph.addNode(node_name)
-                else:
-                    # data section. Should be triples in the form of varname, varvalue, vartype
-                    assert len(values) == 2  # there should be 3 items
-                    varname = values[0]
-                    varvalue = values[1]
+        graphs = Supergraph.namesToGraphs(graphkeys)
 
-                    Supergraph.addNodeData([node_name],varname,varvalue)
+        for graph in graphs:
+            json_dict["Graphs"][graph.name]["nodekeys"] = graph.nodekeys
+            json_dict["Graphs"][graph.name]["connectionkeys"] = graph.connectionkeys
 
-                    #TODO: ADD IN LIST HANDLING
+        with open(filename, 'w') as outfile:
+            json.dump(json_dict, outfile, indent=4, sort_keys=True)
 
-            line = fname.readline().rstrip()    # get next line
+
+    @staticmethod
+    def readGraphFile(filename=""):
+        #TODO Implement reading file
+        return
 
 
 
-        print("READING CONNECTIONS...") # read connections until an empty line is detected
-
-        line = fname.readline().rstrip()  # get next line
-        while line != "":
-            print(line)
-            con_name = None
-            data = line.split(data_seperator)
-            for data_index in range(0, len(data)):
-                values = data[data_index].split(value_seperator)
-                if data_index == 0:
-                    # first section; should be connection name, left key, right key
-                    assert len(values) == 3
-                    con_name = str(values[0])
-                    leftkey = str(values[1])
-                    rightkey = str(values[2])
-
-                    assert Interpreter.checkTokenLegality(con_name)  # connection should not be illegal to use
-                    assert Interpreter.checkTokenLegality(leftkey)  # left key should not be illegal to use
-                    assert Interpreter.checkTokenLegality(rightkey)  # right key should not be illegal to use
-                    Supergraph.addConnection(con_name, leftkey, rightkey)
-                else:
-                    # data section. Should be pairs in the form of varname, varvalue
-                    assert len(values) == 2  # there should be 3 items
-                    varname = values[0]
-                    varvalue = values[1]
-                    # add data to connection
-                    Supergraph.addConnectionData([con_name], varname, varvalue)
-
-            line = fname.readline().rstrip()  # get next line
-            #TODO: ADD IN LIST HANDLING
-
-    # # # DRIVER CODE# # #
 
 import time # used for getting unix time
 import Queue    # used for priority queues
@@ -1676,21 +1574,21 @@ for i in x:
     #except Exception,e:
         #print("\n\n\n"+str(e)+"\n\n\n")
 
-# print("writing to file")
+print("writing to file")
+FileHandler.writeGraphFileJSON("graphfile.json","1",Supergraph.nodelist.keys(),Supergraph.connectionlist.keys())
 
 
-FileHandler.writeGraphFile("testfile.txt",1.00,"|||","::",Supergraph.nodelist.keys(),Supergraph.connectionlist.keys())
 # print("removing everything")
 # Supergraph.removeNodes(Supergraph.getAllNodeKeys())
 # Supergraph.removeConnections(Supergraph.getAllConnectionKeys())
-# print "nodes: ",Supergraph.getAllNodeKeys()
-# print "connections: ",Supergraph.getAllConnectionKeys()
-# print("reading from file")
-FileHandler.readGraphFile("testfile.txt")
+
+
+
 # print "nodes: ",Supergraph.getAllNodeKeys()
 # print "connections: ",Supergraph.getAllConnectionKeys()
 
 #ArtPointsFinder.getArtPoints(Supergraph.getAllNodeKeys(),Supergraph.connectionlist)
+
 #                      __
 #         _______     /*_)-< HISS HISS
 #   ___ /  _____  \__/ /
