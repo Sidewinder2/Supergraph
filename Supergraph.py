@@ -52,7 +52,7 @@ class Supergraph:
     graphlist = {}        # dictionary maintaining a graph name to graph pointer conversion
     nodelist = {}         # dictionary maintaining a node name to node pointer conversion
     connectionlist = {}   # dictionary maintaining a connection name to connection pointer conversion
-    nodeconnectionlist = {}    # maintains a dictionary of nodes to lists of connections
+    nodeconnectionlist = {}    # maintains a dictionary of nodes to Sets of connection keys
 
     supergraphdata = {}   # dictionary maintaining a variable name to variable data conversion
 
@@ -236,6 +236,17 @@ class Supergraph:
             Node.addNodeData(i,  varname,  vardata)
 
     @staticmethod
+    def getNodeDegrees(nodenames = [], degree = "in"):
+        # Returns the degrees or indegrees for a list of node keys
+        assert degree in ["in","out"], AttributeError
+        verified_nodes = Supergraph.namesToNodes(nodenames)  # get list of nodes from keys
+        returnlist = []
+        for node in verified_nodes:
+            returnlist.append(Node.getNodeDegree(node,degree))
+        return returnlist
+
+
+    @staticmethod
     def getNodeData( nodenames,  varname):
         # Gets requested variable from a list of nodes.
         # Returns a list containing the values
@@ -281,12 +292,14 @@ class Supergraph:
     def addConnections( leftnames,  rightnames, direction = 'both', generator = "Connection"):
         # Adds connections to the database
         # Will connect every node from left side to right side,  resulting in L * R connections
+        assert direction in ["both","right"]
+
         verifiedleftnames = Supergraph.verifyNodeNames(leftnames)
         verifiedrightnames = Supergraph.verifyNodeNames(rightnames)
         for left in verifiedleftnames:
             for right in verifiedrightnames:
                 connectionname = KeyGenerator.getNextName(generator, Supergraph.getAllConnectionKeys())
-                Supergraph.addConnection(connectionname, left, right)
+                Supergraph.addConnection(connectionname, left, right, direction)
 
     @staticmethod
     def removeConnections(connectionnames):
@@ -451,15 +464,43 @@ class Node:
         if varname in self.nodedata:
             del self.nodedata[varname]
 
+    def getNodeDegree(self,degree = "in"):
+        # Counts either the indegree or outdegree of the node
+
+        assert degree in ["in","out"], AttributeError
+
+        degree_count = 0    # count of degree for the node
+        c_list = Supergraph.nodeconnectionlist[self.name] # get list of connection keys
+        for connectionkey in c_list:
+            conn = Supergraph.connectionlist[connectionkey]
+            leftkey = Connection.getConnectionData(conn,"leftkey")
+            rightkey = Connection.getConnectionData(conn, "rightkey")
+            direction = Connection.getConnectionData(conn, "direction")
+
+            # Bidirectional edges count either way for in or outdegree
+            if direction == "both":
+                degree_count += 1
+                continue
+
+            if degree == "in":
+                if self.name == rightkey and direction == "right":
+                    degree_count += 1
+            else:
+                if self.name == leftkey and direction == "right":
+                    degree_count += 1
+
+        return degree_count
+
+
 class Connection:
     def __init__(self, name, leftkey, rightkey,
-                 direction = "both"): # The endpoint of the connection. Either left for directed, or both for undirected.
+                 direction = "both"): # The endpoint of the connection. Either right for directed, or both for undirected.
         self.name = name   # unique name of the connection used as a key
-        assert direction in ['left','both']
+        assert direction in ['right','both']
         self.connectiondata = {"leftkey": leftkey, "rightkey":rightkey,"direction":direction}  # maintains information about the connection
 
     def addConnectionData(self,  varname,  vardata):
-        if varname.lower() not in ["name","leftname","rightname","direction"]:
+        if varname.lower() not in ["name","leftkey","rightkey","direction"]:
             self.connectiondata[varname] = vardata
 
     def getConnectionData(self,  varname):
@@ -1154,7 +1195,7 @@ class Interpreter:
                 # get the direction of the connections
                 con_direction = "both"
                 if function == '-->':
-                    con_direction = "left"
+                    con_direction = "right"
                 if len(parameters) == 3:
                     con_direction = parameters[2]
 
@@ -1550,13 +1591,10 @@ class FileHandler:
         with open(filename, 'w') as outfile:
             json.dump(json_dict, outfile, indent=4, sort_keys=True)
 
-
     @staticmethod
     def readGraphFile(filename=""):
         #TODO Implement reading file
         return
-
-
 
 
 import time # used for getting unix time
@@ -1571,21 +1609,15 @@ file = open(Configurations.config_values["runtimescript"], 'r')
 x = file.readlines()
 for i in x:
     Interpreter.evaluateExpression(i.rstrip())
-    #except Exception,e:
-        #print("\n\n\n"+str(e)+"\n\n\n")
 
 print("writing to file")
 FileHandler.writeGraphFileJSON("graphfile.json","1",Supergraph.nodelist.keys(),Supergraph.connectionlist.keys())
 
 
-# print("removing everything")
-# Supergraph.removeNodes(Supergraph.getAllNodeKeys())
-# Supergraph.removeConnections(Supergraph.getAllConnectionKeys())
-
-
-
-# print "nodes: ",Supergraph.getAllNodeKeys()
-# print "connections: ",Supergraph.getAllConnectionKeys()
+print(Supergraph.getAllNodeKeys())
+#print "connections: ",Supergraph.getAllConnectionKeys()
+Supergraph.addConnections(["NODE1"],["NODE2"],'right')
+print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(), degree = "in"))
 
 #ArtPointsFinder.getArtPoints(Supergraph.getAllNodeKeys(),Supergraph.connectionlist)
 

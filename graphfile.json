@@ -2,295 +2,295 @@
     "Connections": {
         "Connection0": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE1", 
             "rightkey": "NODE1"
         }, 
         "Connection1": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE1", 
             "rightkey": "NODE3"
         }, 
         "Connection10": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE3", 
             "rightkey": "NODE5"
         }, 
         "Connection11": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE3", 
             "rightkey": "NODE4"
         }, 
         "Connection12": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE3", 
             "rightkey": "NODE7"
         }, 
         "Connection13": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE3", 
             "rightkey": "NODE6"
         }, 
         "Connection14": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE2", 
             "rightkey": "NODE1"
         }, 
         "Connection15": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE2", 
             "rightkey": "NODE3"
         }, 
         "Connection16": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE2", 
             "rightkey": "NODE2"
         }, 
         "Connection17": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE2", 
             "rightkey": "NODE5"
         }, 
         "Connection18": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE2", 
             "rightkey": "NODE4"
         }, 
         "Connection19": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE2", 
             "rightkey": "NODE7"
         }, 
         "Connection2": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE1", 
             "rightkey": "NODE2"
         }, 
         "Connection20": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE2", 
             "rightkey": "NODE6"
         }, 
         "Connection21": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE5", 
             "rightkey": "NODE1"
         }, 
         "Connection22": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE5", 
             "rightkey": "NODE3"
         }, 
         "Connection23": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE5", 
             "rightkey": "NODE2"
         }, 
         "Connection24": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE5", 
             "rightkey": "NODE5"
         }, 
         "Connection25": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE5", 
             "rightkey": "NODE4"
         }, 
         "Connection26": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE5", 
             "rightkey": "NODE7"
         }, 
         "Connection27": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE5", 
             "rightkey": "NODE6"
         }, 
         "Connection28": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE4", 
             "rightkey": "NODE1"
         }, 
         "Connection29": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE4", 
             "rightkey": "NODE3"
         }, 
         "Connection3": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE1", 
             "rightkey": "NODE5"
         }, 
         "Connection30": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE4", 
             "rightkey": "NODE2"
         }, 
         "Connection31": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE4", 
             "rightkey": "NODE5"
         }, 
         "Connection32": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE4", 
             "rightkey": "NODE4"
         }, 
         "Connection33": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE4", 
             "rightkey": "NODE7"
         }, 
         "Connection34": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE4", 
             "rightkey": "NODE6"
         }, 
         "Connection35": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE7", 
             "rightkey": "NODE1"
         }, 
         "Connection36": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE7", 
             "rightkey": "NODE3"
         }, 
         "Connection37": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE7", 
             "rightkey": "NODE2"
         }, 
         "Connection38": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE7", 
             "rightkey": "NODE5"
         }, 
         "Connection39": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE7", 
             "rightkey": "NODE4"
         }, 
         "Connection4": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE1", 
             "rightkey": "NODE4"
         }, 
         "Connection40": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE7", 
             "rightkey": "NODE7"
         }, 
         "Connection41": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE7", 
             "rightkey": "NODE6"
         }, 
         "Connection42": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE6", 
             "rightkey": "NODE1"
         }, 
         "Connection43": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE6", 
             "rightkey": "NODE3"
         }, 
         "Connection44": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE6", 
             "rightkey": "NODE2"
         }, 
         "Connection45": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE6", 
             "rightkey": "NODE5"
         }, 
         "Connection46": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE6", 
             "rightkey": "NODE4"
         }, 
         "Connection47": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE6", 
             "rightkey": "NODE7"
         }, 
         "Connection48": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE6", 
             "rightkey": "NODE6"
         }, 
         "Connection5": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE1", 
             "rightkey": "NODE7"
         }, 
         "Connection6": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE1", 
             "rightkey": "NODE6"
         }, 
         "Connection7": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE3", 
             "rightkey": "NODE1"
         }, 
         "Connection8": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE3", 
             "rightkey": "NODE3"
         }, 
         "Connection9": {
             "c1": 5.0, 
-            "direction": "both", 
+            "direction": "right", 
             "leftkey": "NODE3", 
             "rightkey": "NODE2"
         }
