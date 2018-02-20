@@ -191,6 +191,14 @@ class Supergraph:
             return False
 
     @staticmethod
+    def addNodes(nodenames = [], nodedata={}):
+        assert type(nodenames) is list
+        assert type(nodedata) is dict
+
+        for nodename in nodenames:
+            Supergraph.addNode(nodename,nodedata)
+
+    @staticmethod
     def removeNodes( nodenames):
         # Removes a list of nodes from the database
         verifiednodes = Supergraph.verifyNodeNames(nodenames)     # get list of nodes from keys
@@ -1618,6 +1626,16 @@ print(Supergraph.getAllNodeKeys())
 #print "connections: ",Supergraph.getAllConnectionKeys()
 Supergraph.addConnections(["NODE1"],["NODE2"],'right')
 print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(), degree = "in"))
+Supergraph.removeNodes(Supergraph.getAllNodeKeys())
+
+
+# testing in and out degrees more
+nodelist = ["N1","N2","N3"]
+Supergraph.addNodes(nodelist)
+Supergraph.addConnections(nodelist,["N1"],"right")
+print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(), degree = "in"))
+print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(), degree = "out"))
+
 
 #ArtPointsFinder.getArtPoints(Supergraph.getAllNodeKeys(),Supergraph.connectionlist)
 
