@@ -237,6 +237,18 @@ class Supergraph:
         return returnlist
 
     @staticmethod
+    def getNodeNeighbors(nodekeys = []):
+        # Get neighbors directly connected to a list of nodes
+        return_list = set()
+        for node in nodekeys:
+            for connection in Supergraph.namesToConnections(Supergraph.nodeconnectionlist[node]):
+                neighbor = Connection.getEndPoint(connection,node)
+                if neighbor is not None:
+                    return_list.add(neighbor)
+
+        return list(return_list)
+
+    @staticmethod
     def addNodeData( nodenames,  varname,  vardata):
         #  Adds data to a list of nodes
         nodes = Supergraph.namesToNodes(nodenames)  #  get list of nodes from keys
@@ -316,12 +328,14 @@ class Supergraph:
             if connectionkey in Supergraph.connectionlist.keys():
                 # remove references to this connection for the left and right nodes it connects
                 c = Supergraph.connectionlist[connectionkey]
-                if c.leftkey in Supergraph.nodeconnectionlist:
-                    if connectionkey in Supergraph.nodeconnectionlist[c.leftkey]:
-                        Supergraph.nodeconnectionlist[c.leftkey].remove(connectionkey)
-                if c.rightkey in Supergraph.nodeconnectionlist:
-                    if connectionkey in Supergraph.nodeconnectionlist[c.rightkey]:
-                        Supergraph.nodeconnectionlist[c.rightkey].remove(connectionkey)
+                leftkey = Connection.getConnectionData(c,"leftkey")
+                rightkey = Connection.getConnectionData(c,"rightkey")
+                if leftkey in Supergraph.nodeconnectionlist:
+                    if connectionkey in Supergraph.nodeconnectionlist[leftkey]:
+                        Supergraph.nodeconnectionlist[leftkey].remove(connectionkey)
+                if rightkey in Supergraph.nodeconnectionlist:
+                    if connectionkey in Supergraph.nodeconnectionlist[rightkey]:
+                        Supergraph.nodeconnectionlist[rightkey].remove(connectionkey)
                 # remove connection
                 del Supergraph.connectionlist[connectionkey]
                 Supergraph.keylist.remove(connectionkey)
@@ -1627,14 +1641,18 @@ print(Supergraph.getAllNodeKeys())
 Supergraph.addConnections(["NODE1"],["NODE2"],'right')
 print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(), degree = "in"))
 Supergraph.removeNodes(Supergraph.getAllNodeKeys())
-
+Supergraph.removeConnections(Supergraph.getAllConnectionKeys())
 
 # testing in and out degrees more
-nodelist = ["N1","N2","N3"]
+nodelist = ["N1","N2","N3","N4"]
 Supergraph.addNodes(nodelist)
-Supergraph.addConnections(nodelist,["N1"],"right")
+Supergraph.addConnections(["N1","N2","N3"],["N4"],"both")
 print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(), degree = "in"))
 print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(), degree = "out"))
+
+print("result:",Supergraph.getNodeNeighbors(["N1"]))
+print("result:",Supergraph.getNodeNeighbors(Supergraph.getNodeNeighbors(["N1"])))
+
 
 
 #ArtPointsFinder.getArtPoints(Supergraph.getAllNodeKeys(),Supergraph.connectionlist)
