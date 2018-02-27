@@ -1624,6 +1624,7 @@ import Queue    # used for priority queues
 import re       # regex library
 import random   # used for random functions
 import json
+import GraphRenderer
 
 Configurations.setRuntimeConfigs()
 
@@ -1653,7 +1654,10 @@ print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(
 print("result:",Supergraph.getNodeNeighbors(["N1"]))
 print("result:",Supergraph.getNodeNeighbors(Supergraph.getNodeNeighbors(["N1"])))
 
-
+# testing rendering system
+circles_list = ["a","b","c","d","e","f"]
+edges = [["a","b"],["c","d"],["e","f"]]
+GraphRenderer.draw_circular_graph(circles_list,edges,"test2.png", 400,400,10,100,(255,255,255),(0,0,0),(0,255,0))
 
 #ArtPointsFinder.getArtPoints(Supergraph.getAllNodeKeys(),Supergraph.connectionlist)
 
