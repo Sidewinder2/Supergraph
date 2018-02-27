@@ -1657,7 +1657,9 @@ print("result:",Supergraph.getNodeNeighbors(Supergraph.getNodeNeighbors(["N1"]))
 # testing rendering system
 circles_list = ["a","b","c","d","e","f"]
 edges = [["a","b"],["c","d"],["e","f"]]
-GraphRenderer.draw_circular_graph(circles_list,edges,"test2.png", 400,400,10,100,(255,255,255),(0,0,0),(0,255,0))
+GraphRenderer.draw_circular_graph(circles_list,edges,"Graph Renders\\circular_test_1.png", 400,400,10,100,(255,255,255),(0,0,0),(0,255,0))
+GraphRenderer.draw_scatter_graph(circles_list,edges,"Graph Renders\\scatter_test_1.png", 400,400,10,0,(255,255,255),(0,0,0),(0,255,0))
+GraphRenderer.draw_scatter_graph(circles_list,edges,"Graph Renders\\scatter_test_2.png", 400,400,10,0,(255,255,255),(0,0,0),(0,255,0))
 
 #ArtPointsFinder.getArtPoints(Supergraph.getAllNodeKeys(),Supergraph.connectionlist)
 

@@ -1,4 +1,5 @@
 import math
+import random
 from PIL import Image, ImageDraw
 import VectorMath
 
@@ -14,10 +15,21 @@ def draw_circular_graph(node_keys, edges, filename="Graph Renders\\test.png",
                                      image_height=image_height,circle_radius=inner_radius,circle_color=circle_color,
                                      edge_color=edge_color,background_color = background_color, line_width = line_width)
 
+def draw_scatter_graph(node_keys, edges, filename="Graph Renders\\test.png",
+                        image_width = 400, image_height = 400, inner_radius = 10, margin = 0,
+                        circle_color = (255,255,255), edge_color = (0,0,0), background_color = (255,0,0),
+                        line_width = 1):
+    # wraps graph renderer to draw points in a scattered fashion
+
+    coordinates = get_scatter_graph_coords(image_width, image_height, node_keys, margin)
+    render_coordinates(coordinates=coordinates,edges=edges, filename=filename, image_width=image_width,
+                                     image_height=image_height,circle_radius=inner_radius,circle_color=circle_color,
+                                     edge_color=edge_color,background_color = background_color, line_width = line_width)
+
 def get_circular_graph_coords(x, y, node_keys, radius):
     # Calculates coordinates in a circle
     # returns dictionary containing node keys to coordinates
-    return_dict = dict()  # returns coordinates for circle of circles
+    return_dict = dict()  # returns coordinates for each node
 
     assert len(node_keys) > 0
     deg_current = 0
@@ -27,8 +39,27 @@ def get_circular_graph_coords(x, y, node_keys, radius):
         coords = VectorMath.polar_to_cartesian(deg_current, radius)
         coords[0] += x
         coords[1] += y
-        return_dict[circle] = (coords)
+        return_dict[circle] = coords
         deg_current += deg_increment
+
+    return return_dict
+
+def get_scatter_graph_coords(width, height, node_keys, margin):
+    # Calculates coordinates in a scatterplot
+    # returns dictionary containing node keys to coordinates
+    return_dict = dict()  # returns coordinates for each node
+
+    assert len(node_keys) > 0
+    assert width > margin * 2, "Margin must be less than image width"
+    assert height > margin * 2, "Margin must be less than image height"
+
+    deg_current = 0
+    deg_increment = 2 * math.pi / len(node_keys)
+
+    for scatterpoint in node_keys:
+        x = random.randint(margin, width - margin)
+        y = random.randint(margin, height - margin)
+        return_dict[scatterpoint] = [x,y]
 
     return return_dict
 
