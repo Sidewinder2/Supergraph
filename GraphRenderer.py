@@ -33,7 +33,7 @@ def get_circular_graph_coords(x, y, node_keys, radius):
 
     assert len(node_keys) > 0
     deg_current = 0
-    deg_increment = 2 * math.pi / len(node_keys)
+    deg_increment = float(360 / len(node_keys))
 
     for circle in node_keys:
         coords = VectorMath.polar_to_cartesian(deg_current, radius)
@@ -52,9 +52,6 @@ def get_scatter_graph_coords(width, height, node_keys, margin):
     assert len(node_keys) > 0
     assert width > margin * 2, "Margin must be less than image width"
     assert height > margin * 2, "Margin must be less than image height"
-
-    deg_current = 0
-    deg_increment = 2 * math.pi / len(node_keys)
 
     for scatterpoint in node_keys:
         x = random.randint(margin, width - margin)
@@ -83,10 +80,53 @@ def render_coordinates(filename, coordinates, edges, image_width, image_height, 
             y1 = int(coordinates[leftkey][1])
             x2 = int(coordinates[rightkey][0])
             y2 = int(coordinates[rightkey][1])
-            surface.line((x1, y1, x2, y2), edge_color, line_width)
+            draw_arrow(surface,x1,y1,x2,y2,"both",edge_color,line_width,5,10)
 
     im.save(filename)   # write image to file
 
 def draw_circle(surface,x,y,radius,color):
     # wrapper to render circles in PIL
     surface.ellipse([x-radius,y-radius,x+radius,y+radius],color)
+
+def draw_arrow(surface,x1,y1,x2,y2,arrow_ends, arrow_color = (0,0,0), line_width = 1, arrow_width = 5, arrow_height = 10):
+    # draws a line with an arrowhead(s) between two points
+
+    assert arrow_ends in ["both","right"]   # arrow ends. Determines which side gets arrows
+    assert isinstance(arrow_height,float) or isinstance(arrow_height,int)
+    assert arrow_height > 0
+
+    dist = math.hypot(x2 - x1, y2 - y1)     # get distance between two end points
+
+    # do nothing if the distance is the same
+    if dist == 0:
+        return
+
+    # draw line between end points
+    surface.line((x1, y1, x2, y2), arrow_color, width=line_width)
+
+    if arrow_height * 2 <= dist:
+        # obtain vectors which determine arrow width perpendicular to the line
+        direction = VectorMath.point_direction((x1,y1),(x2,y2))
+        left_dir = direction + 90
+        left_vect = VectorMath.polar_to_cartesian(left_dir,arrow_width)
+        right_dir = direction + 270
+        right_vect = VectorMath.polar_to_cartesian(right_dir, arrow_width)
+
+        # obtain coordinate arrow_height of way from left end point to right end point
+        midleft_vect = VectorMath.polar_to_cartesian(direction, arrow_height)
+        midpoint_left = [x1 + midleft_vect[0], y1 + midleft_vect[1]]
+
+        # obtain coordinate (dist - arrow height) of way from left end point to right end point
+        midright_vect = VectorMath.polar_to_cartesian(direction,dist - arrow_height)
+        midpoint_right = [x1+midright_vect[0],y1+midright_vect[1]]
+
+        # draw left arrow if needed
+        if arrow_ends == "both":
+            arrow_left = (midpoint_left[0] + left_vect[0], midpoint_left[1] + left_vect[1]) # add left arrow vector to left coord
+            arrow_right = (midpoint_left[0] + right_vect[0], midpoint_left[1] + right_vect[1]) # add right arrow vector to left coord
+            surface.polygon([arrow_left, arrow_right, (x1,y1)], fill=arrow_color) # draw triangle for left arrow
+
+        # draw right arrow
+        arrow_left = (midpoint_right[0] + left_vect[0], midpoint_right[1] + left_vect[1]) # add left arrow vector to right coord
+        arrow_right = (midpoint_right[0] + right_vect[0], midpoint_right[1] + right_vect[1]) # add left arrow vector to right coord
+        surface.polygon([arrow_left, arrow_right, (x2, y2)], fill=arrow_color ) # draw triangle for right arrow

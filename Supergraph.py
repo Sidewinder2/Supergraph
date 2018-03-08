@@ -1628,13 +1628,13 @@ import GraphRenderer
 
 Configurations.setRuntimeConfigs()
 
-file = open(Configurations.config_values["runtimescript"], 'r')
-x = file.readlines()
-for i in x:
-    Interpreter.evaluateExpression(i.rstrip())
-
-print("writing to file")
-FileHandler.writeGraphFileJSON("graphfile.json","1",Supergraph.nodelist.keys(),Supergraph.connectionlist.keys())
+# file = open(Configurations.config_values["runtimescript"], 'r')
+# x = file.readlines()
+# for i in x:
+#     Interpreter.evaluateExpression(i.rstrip())
+#
+# print("writing to file")
+# FileHandler.writeGraphFileJSON("graphfile.json","1",Supergraph.nodelist.keys(),Supergraph.connectionlist.keys())
 
 
 print(Supergraph.getAllNodeKeys())
@@ -1647,7 +1647,7 @@ Supergraph.removeConnections(Supergraph.getAllConnectionKeys())
 # testing in and out degrees more
 nodelist = ["N1","N2","N3","N4"]
 Supergraph.addNodes(nodelist)
-Supergraph.addConnections(["N1","N2","N3"],["N4"],"both")
+Supergraph.addConnections(["N1","N2","N3"],["N4"],"right")
 print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(), degree = "in"))
 print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(), degree = "out"))
 
@@ -1655,11 +1655,11 @@ print("result:",Supergraph.getNodeNeighbors(["N1"]))
 print("result:",Supergraph.getNodeNeighbors(Supergraph.getNodeNeighbors(["N1"])))
 
 # testing rendering system
-circles_list = ["a","b","c","d","e","f"]
-edges = [["a","b"],["c","d"],["e","f"]]
+circles_list = ["a","b","c","d","e","f","g"]
+edges = [["a","b"],["a","c"],["c","d"],["e","f"]]
 GraphRenderer.draw_circular_graph(circles_list,edges,"Graph Renders\\circular_test_1.png", 400,400,10,100,(255,255,255),(0,0,0),(0,255,0))
 GraphRenderer.draw_scatter_graph(circles_list,edges,"Graph Renders\\scatter_test_1.png", 400,400,10,0,(255,255,255),(0,0,0),(0,255,0))
-GraphRenderer.draw_scatter_graph(circles_list,edges,"Graph Renders\\scatter_test_2.png", 400,400,10,0,(255,255,255),(0,0,0),(0,255,0))
+GraphRenderer.draw_scatter_graph(circles_list,edges,"Graph Renders\\scatter_test_2.png", 400,400,10,0,(255,255,255),(255,0,255),(0,255,0))
 
 #ArtPointsFinder.getArtPoints(Supergraph.getAllNodeKeys(),Supergraph.connectionlist)
 
