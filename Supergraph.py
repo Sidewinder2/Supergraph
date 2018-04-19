@@ -49,10 +49,10 @@ class KeyGenerator:
 
 class Supergraph:
     keylist = []          # list of keys. Prevents a connection, graph and a node having the same name
-    graphlist = {}        # dictionary maintaining a graph name to graph pointer conversion
-    nodelist = {}         # dictionary maintaining a node name to node pointer conversion
-    connectionlist = {}   # dictionary maintaining a connection name to connection pointer conversion
-    nodeconnectionlist = {}    # maintains a dictionary of nodes to Sets of connection keys
+    graphlist = dict()        # dictionary maintaining a graph name to graph pointer conversion
+    nodelist = dict()         # dictionary maintaining a node name to node pointer conversion
+    connectionlist = dict()   # dictionary maintaining a connection name to connection pointer conversion
+    nodeconnectionlist = dict()    # maintains a dictionary of nodes to Sets of connection keys
 
     supergraphdata = {}   # dictionary maintaining a variable name to variable data conversion
 
@@ -533,6 +533,12 @@ class Connection:
             return self.name
         return None
 
+    def getLeftKey(self):
+        return self.connectiondata["leftkey"]
+
+    def getRightKey(self):
+        return self.connectiondata["rightkey"]
+
     def removeConnectionData(self,  varname):
         if varname in self.connectiondata:
             del self.connectiondata[varname]
@@ -540,7 +546,9 @@ class Connection:
     def getEndPoint(self,startpoint):
         # Used to traverse a connection, given the start point
         # If you attempt to go the opposite way from a directed edge, it returns None
-        assert startpoint in [self.connectiondata["leftkey"],self.connectiondata["rightkey"]]
+        if startpoint not in [self.connectiondata["leftkey"],self.connectiondata["rightkey"]]:
+            return None
+
         if self.connectiondata["direction"] == "both":
             if startpoint == self.connectiondata["leftkey"]:
                 return self.connectiondata["rightkey"]
@@ -551,6 +559,142 @@ class Connection:
                 return self.connectiondata["rightkey"]
             else:
                 return None
+
+
+class PathFinder:
+    #Impliments pathfinding algorithms using the Supergraph Database
+
+    @staticmethod
+    def getUnweightedBFS(start_node, nodes=list(), connections=list()):
+        # Gets min distances from start node to every other node in subgraph
+
+        from PriorityQueue import PriorityQueue
+
+        assert type(nodes) is list
+        assert type(connections) is list
+
+        if start_node not in nodes:
+            return None
+
+        unvisited_connections = set()  # set of unvisited connection keys
+        node_to_parent = dict()  # maintains parent heirarchy in BFS as node_to_parent[node] = (origin node, connectionkey)
+        node_to_dist = dict()  # maintains distance of given node from start
+
+        node_to_connections = dict()  # maintains dict of node key to sets of connection pointers
+        conn_queue = PriorityQueue()  # stores priority queue of weighted connections as tuples of (origin node, connection, dest_node)
+
+        # add all connections that point somewhere in the subgraph, filtering the ones pointing out of it
+        for conn in connections:
+            if Supergraph.connectionlist[conn].getLeftKey() in nodes and Supergraph.connectionlist[
+                conn].getRightKey() in nodes:
+                unvisited_connections.add(conn)
+
+        # get the dictionary of nodes to sets of connection keys
+        for node in nodes:
+            node_to_connections[node] = Supergraph.nodeconnectionlist[node].intersection(unvisited_connections)
+
+        # add all the connections from the starting node to the queue
+        for conn in node_to_connections[start_node]:
+            endpoint = Supergraph.connectionlist[conn].getEndPoint(start_node)
+            if endpoint is not None:
+                conn_queue.insert(node=(start_node, conn, endpoint), priority=1)
+
+        node_to_dist[start_node] = 0
+
+        while conn_queue.size() > 0:
+            queue_item = conn_queue.pop()[1]  # (origin node, connectionkey, dest_node)
+            startpoint = queue_item[0]
+            current_conn = queue_item[1]
+            endpoint = queue_item[2]
+            print(queue_item)
+
+            # visit unvisited nodes, or revisit ones under a new route
+            if endpoint not in node_to_dist.keys() or (node_to_dist[endpoint] > node_to_dist[startpoint] + 1):
+                node_to_dist[endpoint] = node_to_dist[startpoint] + 1
+                node_to_parent[endpoint] = (startpoint, current_conn)
+
+                # add all connections for new or revisited node to the priority queue
+                for conn in node_to_connections[endpoint]:
+                    new_endpoint = Supergraph.connectionlist[conn].getEndPoint(endpoint)
+                    if new_endpoint is not None:
+                        conn_queue.insert(node=(endpoint, conn, new_endpoint), priority=1)
+
+        return node_to_dist
+
+    @staticmethod
+    def getUnweightedPath(start_node, end_node, nodes = list(), connections = list()):
+        # returns tuple of path from start to end in given subgraph as (nodes, connections, path length)
+        # returns None if no path exists
+
+        from PriorityQueue import PriorityQueue
+
+        assert type(nodes) is list
+        assert type(connections) is list
+
+        if start_node not in nodes or end_node not in nodes:    # if either start or end node not in given subgraph
+            return None
+
+        if start_node == end_node:
+            return ([start_node],list(),0) # return a subgraph of 1 node and 0 connections, with length 0
+
+        filtered_connections = set()       # set of filtered connection keys
+        node_to_parent = dict()  # maintains parent heirarchy in BFS as node_to_parent[node] = (origin node, connectionkey)
+        node_to_dist = dict()               # maintains distance of given node from start
+
+        node_to_connections = dict()    # maintains dict of node key to sets of connection pointers
+        conn_queue = PriorityQueue()    # stores priority queue of weighted connections as tuples of (origin node, connection, dest_node)
+
+        # add all connections that point somewhere in the subgraph, filtering the ones pointing out of it
+        for conn in connections:
+            if Supergraph.connectionlist[conn].getLeftKey() in nodes and Supergraph.connectionlist[conn].getRightKey() in nodes:
+                filtered_connections.add(conn)
+
+        # get the dictionary of nodes to sets of connection keys
+        for node in nodes:
+            node_to_connections[node] = Supergraph.nodeconnectionlist[node].intersection(filtered_connections)
+
+        # add all the connections from the starting node to the queue
+        for conn in node_to_connections[start_node]:
+            endpoint = Supergraph.connectionlist[conn].getEndPoint(start_node)
+            if endpoint is not None:
+                conn_queue.insert(node = (start_node,conn,endpoint), priority = 1)
+
+        # initialize start node
+        node_to_dist[start_node] = 0
+        node_to_parent[start_node] = None
+
+        while conn_queue.size() > 0:
+            queue_item = conn_queue.pop()[1]  # (origin node, connectionkey, dest_node)
+            startpoint = queue_item[0]
+            current_conn = queue_item[1]
+            endpoint = queue_item[2]
+
+            # visit unvisited nodes, or revisit ones under a new route
+            if endpoint not in node_to_dist.keys() or (node_to_dist[endpoint] > node_to_dist[startpoint] + 1):
+                node_to_dist[endpoint] = node_to_dist[startpoint] + 1
+                node_to_parent[endpoint] = (startpoint, current_conn)
+
+                # end goal found.
+                if endpoint is end_node:
+                    parent = node_to_parent[endpoint]
+                    returned_nodes = list() # list of nodes in returned path
+                    returned_connections = list()   # list of connections in returned path
+                    returned_nodes.append(endpoint) # add end node to list
+                    # Traverse up parent tree to find path from end back to start
+                    while parent is not None:
+                        returned_nodes.append(parent[0])
+                        returned_connections.append(parent[1])
+                        parent = node_to_parent[parent[0]]
+
+                    return (returned_nodes,returned_connections, node_to_dist[endpoint])
+
+                # add all connections for new or revisited node to the priority queue
+                for conn in node_to_connections[endpoint]:
+                    new_endpoint = Supergraph.connectionlist[conn].getEndPoint(endpoint)
+                    if new_endpoint is not None:
+                        conn_queue.insert(node=(endpoint, conn, new_endpoint), priority=node_to_dist[endpoint]+1)
+
+        return None # all connections traversed; no path found
 
 class ArtPointsFinder:
     # Todo: Implement ArtPointsFinder
@@ -1645,23 +1789,30 @@ Supergraph.removeNodes(Supergraph.getAllNodeKeys())
 Supergraph.removeConnections(Supergraph.getAllConnectionKeys())
 
 # testing in and out degrees more
-nodelist = ["N1","N2","N3","N4"]
-Supergraph.addNodes(nodelist)
-Supergraph.addConnections(["N1","N2","N3"],["N4"],"right")
+nodelist1 = ["N1","N2","N3","N4"]
+nodelist2 = ["N6","N7","N8","N9"]
+Supergraph.addNodes(nodelist1)
+Supergraph.addNodes(nodelist2)
+Supergraph.addNode("N5")
+Supergraph.addConnections(nodelist1,["N5"],"both")
+Supergraph.addConnections(["N5"],nodelist2,"both")
 print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(), degree = "in"))
 print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(), degree = "out"))
 
 print("result:",Supergraph.getNodeNeighbors(["N1"]))
 print("result:",Supergraph.getNodeNeighbors(Supergraph.getNodeNeighbors(["N1"])))
 
-# testing rendering system
-circles_list = ["a","b","c","d","e","f","g"]
-edges = [["a","b"],["a","c"],["c","d"],["e","f"]]
-GraphRenderer.draw_circular_graph(circles_list,edges,"Graph Renders\\circular_test_1.png", 400,400,10,100,(255,255,255),(0,0,0),(0,255,0))
-GraphRenderer.draw_scatter_graph(circles_list,edges,"Graph Renders\\scatter_test_1.png", 400,400,10,0,(255,255,255),(0,0,0),(0,255,0))
-GraphRenderer.draw_scatter_graph(circles_list,edges,"Graph Renders\\scatter_test_2.png", 400,400,10,0,(255,255,255),(255,0,255),(0,255,0))
+# # testing rendering system
+# circles_list = ["a","b","c","d","e","f","g"]
+# edges = [["a","b"],["a","c"],["c","d"],["e","f"]]
+# GraphRenderer.draw_circular_graph(circles_list,edges,"Graph Renders\\circular_test_1.png", 400,400,10,100,(255,255,255),(0,0,0),(0,255,0))
+# GraphRenderer.draw_scatter_graph(circles_list,edges,"Graph Renders\\scatter_test_1.png", 400,400,10,0,(255,255,255),(0,0,0),(0,255,0))
+# GraphRenderer.draw_scatter_graph(circles_list,edges,"Graph Renders\\scatter_test_2.png", 400,400,10,0,(255,255,255),(255,0,255),(0,255,0))
 
 #ArtPointsFinder.getArtPoints(Supergraph.getAllNodeKeys(),Supergraph.connectionlist)
+
+
+PathFinder.getUnweightedPath(start_node="N1",end_node="N9",nodes=Supergraph.getAllNodeKeys(),connections=Supergraph.connectionlist.keys())
 
 #                      __
 #         _______     /*_)-< HISS HISS
