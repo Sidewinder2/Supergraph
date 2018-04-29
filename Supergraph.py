@@ -156,7 +156,7 @@ class Supergraph:
     @staticmethod
     def printGraphList():
         #  Lists names of all existing graphs
-        print Supergraph.graphlist.keys()
+        print(Supergraph.graphlist.keys())
 
     @staticmethod
     def verifyGraphNames( graphnames = []):
@@ -215,7 +215,7 @@ class Supergraph:
     @staticmethod
     def printNodeList():
         # lists the node keys
-        print Supergraph.nodelist.keys()
+        print(Supergraph.nodelist.keys())
 
     @staticmethod
     def verifyNodeNames( nodenames = []):
@@ -324,7 +324,7 @@ class Supergraph:
     @staticmethod
     def removeConnections(connectionnames):
         # removes the specified connections,  if they exist
-        for connectionkey in connectionnames:
+        for connectionkey in list(connectionnames):
             if connectionkey in Supergraph.connectionlist.keys():
                 # remove references to this connection for the left and right nodes it connects
                 c = Supergraph.connectionlist[connectionkey]
@@ -348,7 +348,7 @@ class Supergraph:
     @staticmethod
     def printConnectionList():
         # lists the node keys
-        print Supergraph.connectionlist.keys()
+        print(Supergraph.connectionlist.keys())
 
     @staticmethod
     def getNextConnectionName():
@@ -410,7 +410,7 @@ class Supergraph:
     def showAllConnections():
         # prints all connections, and their left and right keys
         for connect in Supergraph.connectionlist.values():
-            print connect.name, ": ",connect.leftkey,", ",connect.rightkey
+            print(connect.name, ": ",connect.leftkey,", ",connect.rightkey)
 
     @staticmethod
     def getNodeConnections(nodekeys=[],connectionkeys = []):
@@ -513,7 +513,6 @@ class Node:
 
         return degree_count
 
-
 class Connection:
     def __init__(self, name, leftkey, rightkey,
                  direction = "both"): # The endpoint of the connection. Either right for directed, or both for undirected.
@@ -539,6 +538,9 @@ class Connection:
     def getRightKey(self):
         return self.connectiondata["rightkey"]
 
+    def getDirection(self):
+        return self.connectiondata["direction"]
+
     def removeConnectionData(self,  varname):
         if varname in self.connectiondata:
             del self.connectiondata[varname]
@@ -560,6 +562,73 @@ class Connection:
             else:
                 return None
 
+
+class GraphCentrality:
+    # Adds various methods for computing graph centrality
+
+    @staticmethod
+    def pruneConnections(nodes=list(), connections=list()):
+        filtered_connections = set()  # set of filtered connection keys
+        # add all connections that point somewhere in the subgraph, filtering the ones pointing out of it
+        for conn in connections:
+            if Supergraph.connectionlist[conn].getLeftKey() in nodes and Supergraph.connectionlist[
+                conn].getRightKey() in nodes:
+                filtered_connections.add(conn)
+        return filtered_connections
+
+    @staticmethod
+    def getEigenVectorCentrality(nodes=list(), connections=list(), iteration_count = 50):
+        from numpy import matrix, dot, copy
+
+        node_to_index = dict()  # quickly convert node keys to their respective index in the matrices
+        node_to_weight = dict()  # quickly convert node keys to their weights
+        counter = 0
+        for node in nodes:
+            node_to_index[node] = counter
+            node_to_weight[node] = 0
+            counter += 1
+
+        # create empty adjacency matrix
+        adjacency = list()  # adjacency matrix as a list to be converted to numpy
+        for index in range(0,len(nodes)):
+            adjacency.append([0] * len(nodes))
+
+        filtered_connections = GraphCentrality.pruneConnections(nodes,connections)
+
+        # get node weights
+        for item in filtered_connections:
+            conn = Supergraph.namesToConnections([item])[0]
+            leftkey = Connection.getLeftKey(conn)
+            rightkey = Connection.getRightKey(conn)
+            node_to_weight[leftkey] += 1
+            if Connection.getDirection(conn) == "both":
+                node_to_weight[rightkey] += 1
+
+        # populate adjacency matrix
+        for item in filtered_connections:
+            conn = Supergraph.namesToConnections([item])[0]
+            leftkey = Connection.getLeftKey(conn)
+            rightkey = Connection.getRightKey(conn)
+
+            adjacency[node_to_index[rightkey]][node_to_index[leftkey]] = 1.0 / max(1,node_to_weight[leftkey])
+
+            if Connection.getDirection(conn) == "both":
+                adjacency[node_to_index[leftkey]][node_to_index[rightkey]] = 1.0 / max(1,node_to_weight[rightkey])
+
+        # assign each node a starting value for centrality
+        centrality = list()
+        for node in nodes:
+            centrality.append([1.0 / max(1, len(nodes))])
+
+        # get numpy matrices
+        centrality_matrix = matrix(centrality)
+        adjacency_matrix = matrix(adjacency)
+
+        # perform matrix multiplication to compute centrality
+        for x in range(iteration_count):
+            centrality_matrix = dot(adjacency_matrix, centrality_matrix)
+
+        return centrality_matrix
 
 class PathFinder:
     #Impliments pathfinding algorithms using the Supergraph Database
@@ -622,14 +691,20 @@ class PathFinder:
         return node_to_dist
 
     @staticmethod
+    def pruneConnections(nodes = list(), connections = list()):
+        filtered_connections = set()  # set of filtered connection keys
+        # add all connections that point somewhere in the subgraph, filtering the ones pointing out of it
+        for conn in connections:
+            if Supergraph.connectionlist[conn].getLeftKey() in nodes and Supergraph.connectionlist[conn].getRightKey() in nodes:
+                filtered_connections.add(conn)
+        return filtered_connections
+
+    @staticmethod
     def getUnweightedPath(start_node, end_node, nodes = list(), connections = list()):
         # returns tuple of path from start to end in given subgraph as (nodes, connections, path length)
         # returns None if no path exists
 
         from PriorityQueue import PriorityQueue
-
-        assert type(nodes) is list
-        assert type(connections) is list
 
         if start_node not in nodes or end_node not in nodes:    # if either start or end node not in given subgraph
             return None
@@ -644,10 +719,7 @@ class PathFinder:
         node_to_connections = dict()    # maintains dict of node key to sets of connection pointers
         conn_queue = PriorityQueue()    # stores priority queue of weighted connections as tuples of (origin node, connection, dest_node)
 
-        # add all connections that point somewhere in the subgraph, filtering the ones pointing out of it
-        for conn in connections:
-            if Supergraph.connectionlist[conn].getLeftKey() in nodes and Supergraph.connectionlist[conn].getRightKey() in nodes:
-                filtered_connections.add(conn)
+        filtered_connections = PathFinder.pruneConnections(nodes, connections)
 
         # get the dictionary of nodes to sets of connection keys
         for node in nodes:
@@ -698,89 +770,94 @@ class PathFinder:
 
 class ArtPointsFinder:
     # Todo: Implement ArtPointsFinder
+    print("not done yet")
 
-    @staticmethod
-    def getArtPoints(nodes = [], connections = {}):
-        assert type(nodes) is list
-        assert type(connections) is dict
-        assert len(nodes) > 0
-        assert len(connections.keys()) > 0
-
-        print ("Current nodes: ",nodes)
-        # Returns articulated points, given a list of node and connection keys
-        unvisited_nodes = list(nodes)  # maintains list of previously visited nodes
-        unvisited_connections = connections.keys()
-        node_to_parent = {}             # maintains parent heirarchy in DFS
-        node_to_index = {}              # maintains index of given node
-        node_to_low = {}                # maintains low value of given node
-        counter = 1
-
-        node_stack = list(nodes)
-        current_node_key = ""
-
-        # remove all connections that point somewhere not in the subgraph
-        for conn in unvisited_connections:
-            if connections[conn].leftkey not in unvisited_nodes or connections[conn].rightkey not in unvisited_nodes:
-                unvisited_connections.remove(conn)
-
-
-        while len(node_stack) > 0:
-            # pop item from stack to create a DFS
-            current_node_key = node_stack.pop(0)
-            print("Current node: ", current_node_key)
-
-            if current_node_key in unvisited_nodes:
-                # new node found. Assign values
-                unvisited_nodes.remove(current_node_key)                 # node has now been visited
-                node_to_index[current_node_key] = counter           # its index is current counter
-                node_to_parent[current_node_key] = ""                 # its parent is the last enountered node
-
-                node_to_low[current_node_key] = counter
-                counter += 1  # increment counter
-
-            # iterate through all connections for the current node
-            for conn in unvisited_connections:
-                leftkey = connections[conn].leftkey
-                rightkey = connections[conn].rightkey
-
-                # from left to right
-                if leftkey == current_node_key:
-                    print("Current connection: ", conn, "left:", leftkey, "right: ", rightkey)
-                    unvisited_connections.remove(conn)
-
-                    if rightkey in unvisited_nodes:
-                        print("unvisited",unvisited_nodes)
-                        # new node found. Assign values
-                        node_stack.insert(0,rightkey)
-                        unvisited_nodes.remove(rightkey)  # node has now been visited
-                        node_to_index[rightkey] = counter  # its index is current counter
-                        node_to_parent[rightkey] = leftkey  # its parent is the last enountered node
-                        node_to_low[rightkey] = counter
-                        counter += 1  # increment counter
-                        print("Current counter: ", counter)
-                    elif node_to_low[leftkey] > node_to_low[rightkey]:
-                        print("\tWAT",leftkey,rightkey)
-                        temp_value = node_to_index[rightkey]
-                        child_key = leftkey
-                        node_to_low[leftkey] = temp_value
-                        while child_key != "":
-                            print ("\t" + child_key)
-                            if node_to_parent[child_key] != "":
-                                if node_to_low[node_to_parent[child_key]] > node_to_low[child_key]:
-                                    node_to_low[child_key] = temp_value
-                            child_key = node_to_parent[child_key]
-
-        # at the end print all nodes and data about them
-        for nodekey in node_to_parent.keys():
-            print(nodekey, "parent:",node_to_parent[nodekey])
-            print("index:",node_to_index[nodekey])
-            print("low:",node_to_low[nodekey])
-
-        for conn in connections.keys():
-            leftkey = connections[conn].leftkey
-            rightkey = connections[conn].rightkey
-            if node_to_low[rightkey] < node_to_index[leftkey]:
-                print(leftkey + " is art point")
+    # @staticmethod
+    # def getArtPoints(nodes = [], connections = []):
+    #     assert type(nodes) is list
+    #     assert type(connections) is list
+    #     assert len(nodes) > 0
+    #     assert len(connections()) > 0
+    #
+    #     print("Current nodes: ",nodes)
+    #     # Returns articulated points, given a list of node and connection keys
+    #     node_to_parent = {}             # maintains parent heirarchy in DFS
+    #     node_to_time = {}              # maintains discovery time of given node
+    #     node_to_low = {}                # maintains low value of given node
+    #     counter = 1
+    #
+    #     node_stack = list(nodes)
+    #     current_node_key = ""
+    #
+    #     unvisited_nodes = list(nodes)
+    #     filtered_connections = dict()  # set of filtered connection keys
+    #
+    #     # add all connections that point somewhere in the subgraph, filtering the ones pointing out of it
+    #     for conn in connections:
+    #         if Supergraph.connectionlist[conn].getLeftKey() in nodes and Supergraph.connectionlist[conn].getRightKey() in nodes:
+    #             filtered_connections.add(conn)
+    #
+    #     node_to_connections = dict()  # maintains dict of node key to sets of connection pointers
+    #     # get the dictionary of nodes to sets of connection keys
+    #     for node in nodes:
+    #         node_to_connections[node] = Supergraph.nodeconnectionlist[node].intersection(filtered_connections)
+    #
+    #     while len(node_stack) > 0:
+    #         # pop item from stack to create a DFS
+    #         current_node_key = node_stack.pop(0)
+    #         print("Current node: ", current_node_key)
+    #
+    #         if current_node_key in unvisited_nodes:
+    #             # new node found. Assign values
+    #             unvisited_nodes.remove(current_node_key)                # node has now been visited
+    #             node_to_time[current_node_key] = counter                # its index is current counter
+    #             node_to_parent[current_node_key] = ""                   # its parent is the last enountered node
+    #
+    #             node_to_low[current_node_key] = counter
+    #             counter += 1  # increment counter
+    #
+    #         # iterate through all connections for the current node
+    #         for conn in filtered_connections:
+    #             rightkey = Supergraph.connectionlist[conn].getEndPoint(current_node_key)
+    #
+    #             # from left to right
+    #             if leftkey == current_node_key:
+    #                 print("Current connection: ", conn, "left:", leftkey, "right: ", rightkey)
+    #                 filtered_connections.remove(conn)
+    #
+    #                 if rightkey in unvisited_nodes:
+    #                     print("unvisited",unvisited_nodes)
+    #                     # new node found. Assign values
+    #                     node_stack.insert(0,rightkey)
+    #                     unvisited_nodes.remove(rightkey)  # node has now been visited
+    #                     node_to_time[rightkey] = counter  # its index is current counter
+    #                     node_to_parent[rightkey] = leftkey  # its parent is the last enountered node
+    #                     node_to_low[rightkey] = counter
+    #                     counter += 1  # increment counter
+    #                     print("Current counter: ", counter)
+    #                 elif node_to_low[leftkey] > node_to_low[rightkey]:
+    #                     print("\tWAT",leftkey,rightkey)
+    #                     temp_value = node_to_time[rightkey]
+    #                     child_key = leftkey
+    #                     node_to_low[leftkey] = temp_value
+    #                     while child_key != "":
+    #                         print ("\t" + child_key)
+    #                         if node_to_parent[child_key] != "":
+    #                             if node_to_low[node_to_parent[child_key]] > node_to_low[child_key]:
+    #                                 node_to_low[child_key] = temp_value
+    #                         child_key = node_to_parent[child_key]
+    #
+    #     # at the end print all nodes and data about them
+    #     for nodekey in node_to_parent.keys():
+    #         print(nodekey, "parent:",node_to_parent[nodekey])
+    #         print("index:",node_to_index[nodekey])
+    #         print("low:",node_to_low[nodekey])
+    #
+    #     for conn in connections.keys():
+    #         leftkey = connections[conn].leftkey
+    #         rightkey = connections[conn].rightkey
+    #         if node_to_low[rightkey] < node_to_index[leftkey]:
+    #             print(leftkey + " is art point")
 
 class Interpreter:
     S = Supergraph()
@@ -914,14 +991,14 @@ class Interpreter:
         if function == "PRINT":
             # Basic print; will unpack values if only 1 is given
             if len(parameters) == 1:
-                print parameters[0]
+                print(parameters[0])
             else:
-                print parameters
+                print(parameters)
             return None
 
         if function == "PRINTKEYS":
             # Prints all existing keys in the supergraph
-            print Supergraph.getKeyList()
+            print(Supergraph.getKeyList())
             return None
 
         if function == "GETTIME":
@@ -1495,7 +1572,7 @@ class Interpreter:
     def evaluateExpression(expression, this = ""):
         # Evaluates an expression. Tokenizes it, then evaluates the tokens
         # this variables references what the keyword THIS references in the supergraph
-        print "EXPRESSION: "+expression
+        print("EXPRESSION: "+expression)
         tokenlist = Interpreter.tokenizeExpression(expression)
         #print tokenlist
         return Interpreter.evaluateTokens(tokenlist, this)
@@ -1764,7 +1841,7 @@ class FileHandler:
 
 
 import time # used for getting unix time
-import Queue    # used for priority queues
+import queue    # used for priority queues
 import re       # regex library
 import random   # used for random functions
 import json
@@ -1796,6 +1873,7 @@ Supergraph.addNodes(nodelist2)
 Supergraph.addNode("N5")
 Supergraph.addConnections(nodelist1,["N5"],"both")
 Supergraph.addConnections(["N5"],nodelist2,"both")
+Supergraph.addConnections(["N5"],nodelist2,"both")
 print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(), degree = "in"))
 print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(), degree = "out"))
 
@@ -1811,8 +1889,20 @@ print("result:",Supergraph.getNodeNeighbors(Supergraph.getNodeNeighbors(["N1"]))
 
 #ArtPointsFinder.getArtPoints(Supergraph.getAllNodeKeys(),Supergraph.connectionlist)
 
+# testing pathfinding
+print("resulting path: ",PathFinder.getUnweightedPath(start_node="N1",end_node="N9",nodes=Supergraph.getAllNodeKeys(),connections=Supergraph.connectionlist.keys()))
 
-PathFinder.getUnweightedPath(start_node="N1",end_node="N9",nodes=Supergraph.getAllNodeKeys(),connections=Supergraph.connectionlist.keys())
+
+# testing eigenvector centrality
+Supergraph.removeNodes(Supergraph.getAllNodeKeys())
+Supergraph.removeConnections(Supergraph.getAllConnectionKeys())
+nodelist1 = ["N1","N2","N3","N4"]
+Supergraph.addNodes(nodelist1)
+Supergraph.addConnections(["N1"],["N2","N3","N4"],"right")
+Supergraph.addConnections(["N2"],["N3","N4"],"right")
+Supergraph.addConnections(["N3"],["N1"],"right")
+Supergraph.addConnections(["N4"],["N1","N3"],"right")
+print(GraphCentrality.getEigenVectorCentrality(nodes=Supergraph.getAllNodeKeys(),connections=Supergraph.connectionlist.keys()))
 
 #                      __
 #         _______     /*_)-< HISS HISS
