@@ -578,7 +578,9 @@ class GraphCentrality:
 
     @staticmethod
     def getEigenVectorCentrality(nodes=list(), connections=list(), iteration_count = 50):
-        from numpy import matrix, dot, copy
+        # returns a dict containing the eigenvector centrality for each node in the given subgraph
+
+        from numpy import matrix, dot
 
         node_to_index = dict()  # quickly convert node keys to their respective index in the matrices
         node_to_weight = dict()  # quickly convert node keys to their weights
@@ -610,15 +612,16 @@ class GraphCentrality:
             leftkey = Connection.getLeftKey(conn)
             rightkey = Connection.getRightKey(conn)
 
-            adjacency[node_to_index[rightkey]][node_to_index[leftkey]] = 1.0 / max(1,node_to_weight[leftkey])
+            adjacency[node_to_index[leftkey]][node_to_index[rightkey]] = 1.0 / max(1, node_to_weight[leftkey])
 
             if Connection.getDirection(conn) == "both":
-                adjacency[node_to_index[leftkey]][node_to_index[rightkey]] = 1.0 / max(1,node_to_weight[rightkey])
+                adjacency[node_to_index[rightkey]][node_to_index[leftkey]] = 1.0 / max(1, node_to_weight[rightkey])
 
         # assign each node a starting value for centrality
         centrality = list()
         for node in nodes:
-            centrality.append([1.0 / max(1, len(nodes))])
+            # centrality.append([1.0 / max(1, len(nodes))])
+            centrality.append(1.0 / max(1, len(nodes)))
 
         # get numpy matrices
         centrality_matrix = matrix(centrality)
@@ -626,9 +629,15 @@ class GraphCentrality:
 
         # perform matrix multiplication to compute centrality
         for x in range(iteration_count):
-            centrality_matrix = dot(adjacency_matrix, centrality_matrix)
+            centrality_matrix = dot(centrality_matrix, adjacency_matrix)
 
-        return centrality_matrix
+        # convert answer to dictionary
+        centrality_list = centrality_matrix.tolist()[0]
+        eigenvalues = dict()
+        for node in nodes:
+            eigenvalues[node] = centrality_list[node_to_index[node]]
+
+        return eigenvalues
 
 class PathFinder:
     #Impliments pathfinding algorithms using the Supergraph Database
@@ -1903,6 +1912,7 @@ Supergraph.addConnections(["N2"],["N3","N4"],"right")
 Supergraph.addConnections(["N3"],["N1"],"right")
 Supergraph.addConnections(["N4"],["N1","N3"],"right")
 print(GraphCentrality.getEigenVectorCentrality(nodes=Supergraph.getAllNodeKeys(),connections=Supergraph.connectionlist.keys()))
+
 
 #                      __
 #         _______     /*_)-< HISS HISS
