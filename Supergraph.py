@@ -606,6 +606,13 @@ class GraphCentrality:
             if Connection.getDirection(conn) == "both":
                 node_to_weight[rightkey] += 1
 
+        # to avoid sinks in directed graphs, nodes with no outbounds link to ALL other nodes
+        for node in node_to_weight.keys():
+            if node_to_weight[node] == 0:
+                for outbound in node_to_weight.keys():
+                    if node != outbound:
+                        adjacency[node_to_index[node]][node_to_index[outbound]] = 1.0 / max(1,len(nodes) - 1)
+
         # populate adjacency matrix
         for item in filtered_connections:
             conn = Supergraph.namesToConnections([item])[0]
@@ -1905,12 +1912,13 @@ print("resulting path: ",PathFinder.getUnweightedPath(start_node="N1",end_node="
 # testing eigenvector centrality
 Supergraph.removeNodes(Supergraph.getAllNodeKeys())
 Supergraph.removeConnections(Supergraph.getAllConnectionKeys())
-nodelist1 = ["N1","N2","N3","N4"]
+nodelist1 = ["N1","N2","N3","N4","N5"]
 Supergraph.addNodes(nodelist1)
 Supergraph.addConnections(["N1"],["N2","N3","N4"],"right")
 Supergraph.addConnections(["N2"],["N3","N4"],"right")
 Supergraph.addConnections(["N3"],["N1"],"right")
 Supergraph.addConnections(["N4"],["N1","N3"],"right")
+Supergraph.addConnections(["N4"],["N5"],"right")
 print(GraphCentrality.getEigenVectorCentrality(nodes=Supergraph.getAllNodeKeys(),connections=Supergraph.connectionlist.keys()))
 
 
