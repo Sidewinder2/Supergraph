@@ -650,6 +650,91 @@ class PathFinder:
     #Impliments pathfinding algorithms using the Supergraph Database
 
     @staticmethod
+    def getUnweightedAllPairs(nodes=list(), connections=list()):
+        # get a 2d dictionary getting path info from all given nodes to all other nodes(if possible) in given subgraph
+
+        node_to_visited_time = dict() # maintains node, to when that node visited another node
+        node_to_destination_to_node = dict()  # maintains parent heirarchy in BFS as node_to_parent[node] = (origin node, time)
+        time = 0        # current step
+        path_count = 0    # number of paths found
+        time_to_node_to_new = dict()    # maintains newly discovered nodes at each time step
+        time_to_node_to_new[0] = dict() # initialize discovered nodes at time 0
+
+        # get the dictionary of nodes to sets of connection keys
+        for node in nodes:
+            node_to_visited_time[node] = dict()
+            node_to_destination_to_node[node] = dict()
+            time_to_node_to_new[0][node] = set()
+            node_to_unvisited_nodes = set(nodes)
+            node_to_unvisited_nodes.remove(node)
+
+        # add all connections that point somewhere in the subgraph, filtering the ones pointing out of it
+        # additionally, begin population of pathing dictionaries
+        for conn in connections:
+            leftkey = Supergraph.connectionlist[conn].getLeftKey()
+            rightkey = Supergraph.connectionlist[conn].getRightKey()
+            if leftkey == rightkey:
+                continue    # recursive connection, ignore it
+            if leftkey in nodes and rightkey in nodes:
+                node_to_visited_time[leftkey][rightkey] = 0                 # time of discovery
+                node_to_destination_to_node[leftkey][rightkey] = leftkey    # tell the left key the right key is connected using the left
+                time_to_node_to_new[0][leftkey].add(rightkey)               # right was discovered at initiazation by left
+                path_count += 1
+            else:
+                continue    # edge points outside of graph; ignore it
+            if Supergraph.connectionlist[conn].getDirection() == "both":    # if bidirectional, handle reverse case
+                node_to_visited_time[rightkey][leftkey] = 0                 # time of discovery
+                node_to_destination_to_node[rightkey][leftkey] = rightkey   # tell the right key the left key is connected using the right
+                time_to_node_to_new[0][rightkey].add(leftkey)               # leftkey was discovered at initiazation by right
+                path_count += 1
+
+        finished = False    # will exit when no propagation is capable
+
+
+        while(not finished):
+            finished = True # will exit unless propagation occurs on this step
+            time_to_node_to_new[time+1] = dict()
+
+            print(time)
+
+            # iterate over all nodes(A) that are scheduled to propagate this timestep
+            for node in time_to_node_to_new[time].keys():
+                print("\t",node)
+                # iterate over the newly discovered nodes(B) for each node(A)
+                for last_found_node in time_to_node_to_new[time][node]:
+                    # find the nodes(C) that new node(B) has access to that the current node(A) doesn't know about
+                    newly_found_nodes = node_to_destination_to_node[last_found_node].keys() - node_to_destination_to_node[node].keys()    # find the nodes the recent node found
+
+                    # Grab the routing info from the B to C and pass it to A
+                    for new_node in newly_found_nodes:
+                        path_count += 1
+                        node_to_visited_time[node][new_node] = time+1       # add discovery time for new node
+                        node_to_destination_to_node[node][new_node] = last_found_node
+                        # create a new set for node A at future time holding the newest found nodes if it doesn't exist
+                        if node not in time_to_node_to_new[time+1].keys():
+                            time_to_node_to_new[time + 1][node] = set()
+                        time_to_node_to_new[time+1][node].add(new_node)
+                        finished = False    # propagation happened, so we won't exit
+            time_to_node_to_new.pop(time)
+            time += 1
+
+
+        # # print the propagation of the algorithm
+        # for time in time_to_node_to_new.keys():
+        #     print(time,time_to_node_to_new[time])
+
+        from time import sleep
+
+        # for node in node_to_destination_to_node.keys():
+        #     print(node,node_to_destination_to_node[node])
+
+        print("paths", path_count, "time steps:", time)
+
+        return node_to_destination_to_node  # returns dictionary containing all necessary routing info
+
+
+
+    @staticmethod
     def getUnweightedBFS(start_node, nodes=list(), connections=list()):
         # Gets min distances from start node to every other node in subgraph
 
@@ -786,7 +871,7 @@ class PathFinder:
 
 class ArtPointsFinder:
     # Todo: Implement ArtPointsFinder
-    print("not done yet")
+    pass
 
     # @staticmethod
     # def getArtPoints(nodes = [], connections = []):
@@ -1874,27 +1959,27 @@ Configurations.setRuntimeConfigs()
 # FileHandler.writeGraphFileJSON("graphfile.json","1",Supergraph.nodelist.keys(),Supergraph.connectionlist.keys())
 
 
-print(Supergraph.getAllNodeKeys())
-#print "connections: ",Supergraph.getAllConnectionKeys()
-Supergraph.addConnections(["NODE1"],["NODE2"],'right')
-print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(), degree = "in"))
-Supergraph.removeNodes(Supergraph.getAllNodeKeys())
-Supergraph.removeConnections(Supergraph.getAllConnectionKeys())
-
-# testing in and out degrees more
-nodelist1 = ["N1","N2","N3","N4"]
-nodelist2 = ["N6","N7","N8","N9"]
-Supergraph.addNodes(nodelist1)
-Supergraph.addNodes(nodelist2)
-Supergraph.addNode("N5")
-Supergraph.addConnections(nodelist1,["N5"],"both")
-Supergraph.addConnections(["N5"],nodelist2,"both")
-Supergraph.addConnections(["N5"],nodelist2,"both")
-print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(), degree = "in"))
-print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(), degree = "out"))
-
-print("result:",Supergraph.getNodeNeighbors(["N1"]))
-print("result:",Supergraph.getNodeNeighbors(Supergraph.getNodeNeighbors(["N1"])))
+# print(Supergraph.getAllNodeKeys())
+# #print "connections: ",Supergraph.getAllConnectionKeys()
+# Supergraph.addConnections(["NODE1"],["NODE2"],'right')
+# print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(), degree = "in"))
+# Supergraph.removeNodes(Supergraph.getAllNodeKeys())
+# Supergraph.removeConnections(Supergraph.getAllConnectionKeys())
+#
+# # testing in and out degrees more
+# nodelist1 = ["N1","N2","N3","N4"]
+# nodelist2 = ["N6","N7","N8","N9"]
+# Supergraph.addNodes(nodelist1)
+# Supergraph.addNodes(nodelist2)
+# Supergraph.addNode("N5")
+# Supergraph.addConnections(nodelist1,["N5"],"both")
+# Supergraph.addConnections(["N5"],nodelist2,"both")
+# Supergraph.addConnections(["N5"],nodelist2,"both")
+# print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(), degree = "in"))
+# print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(), degree = "out"))
+#
+# print("result:",Supergraph.getNodeNeighbors(["N1"]))
+# print("result:",Supergraph.getNodeNeighbors(Supergraph.getNodeNeighbors(["N1"])))
 
 # # testing rendering system
 # circles_list = ["a","b","c","d","e","f","g"]
@@ -1906,21 +1991,50 @@ print("result:",Supergraph.getNodeNeighbors(Supergraph.getNodeNeighbors(["N1"]))
 #ArtPointsFinder.getArtPoints(Supergraph.getAllNodeKeys(),Supergraph.connectionlist)
 
 # testing pathfinding
-print("resulting path: ",PathFinder.getUnweightedPath(start_node="N1",end_node="N9",nodes=Supergraph.getAllNodeKeys(),connections=Supergraph.connectionlist.keys()))
+# print("resulting path: ",PathFinder.getUnweightedPath(start_node="N1",end_node="N9",nodes=Supergraph.getAllNodeKeys(),connections=Supergraph.connectionlist.keys()))
 
 
-# testing eigenvector centrality
+# # testing eigenvector centrality
+# Supergraph.removeNodes(Supergraph.getAllNodeKeys())
+# Supergraph.removeConnections(Supergraph.getAllConnectionKeys())
+# nodelist1 = ["N1","N2","N3","N4","N5"]
+# Supergraph.addNodes(nodelist1)
+# Supergraph.addConnections(["N1"],["N2","N3","N4"],"right")
+# Supergraph.addConnections(["N2"],["N3","N4"],"right")
+# Supergraph.addConnections(["N3"],["N1"],"right")
+# Supergraph.addConnections(["N4"],["N1","N3"],"right")
+# Supergraph.addConnections(["N4"],["N5"],"right")
+# print(GraphCentrality.getEigenVectorCentrality(nodes=Supergraph.getAllNodeKeys(),connections=Supergraph.connectionlist.keys()))
+
+
+
+
+
+# testing pathfinding
 Supergraph.removeNodes(Supergraph.getAllNodeKeys())
 Supergraph.removeConnections(Supergraph.getAllConnectionKeys())
-nodelist1 = ["N1","N2","N3","N4","N5"]
-Supergraph.addNodes(nodelist1)
-Supergraph.addConnections(["N1"],["N2","N3","N4"],"right")
-Supergraph.addConnections(["N2"],["N3","N4"],"right")
-Supergraph.addConnections(["N3"],["N1"],"right")
-Supergraph.addConnections(["N4"],["N1","N3"],"right")
-Supergraph.addConnections(["N4"],["N5"],"right")
-print(GraphCentrality.getEigenVectorCentrality(nodes=Supergraph.getAllNodeKeys(),connections=Supergraph.connectionlist.keys()))
 
+    # generate a line graph divided into two sections
+nodelist1 = []
+for i in range(0,2000):
+    nodelist1.append("N"+str(i))
+
+Supergraph.addNodes(nodelist1)
+# for node in range(int(len(nodelist1)/2) -1):
+#     Supergraph.addConnections([nodelist1[node]],[nodelist1[node+1]],"right")
+
+# for node in range(int(len(nodelist1)/2), len(nodelist1)-1):
+#     Supergraph.addConnections([nodelist1[node]],[nodelist1[node+1]],"both")
+
+for node in range(len(nodelist1)-1):
+    Supergraph.addConnections([nodelist1[node]],[nodelist1[node+1]],"right")
+Supergraph.addConnections([nodelist1[len(nodelist1)-1]],[nodelist1[0]],"right")
+
+from time import time, sleep
+start_time = time()
+PathFinder.getUnweightedAllPairs(nodes=Supergraph.getAllNodeKeys(),connections=Supergraph.connectionlist.keys())
+end_time = time() - start_time
+print(end_time)
 
 #                      __
 #         _______     /*_)-< HISS HISS
