@@ -801,9 +801,12 @@ class PathFinder:
         return filtered_connections
 
     @staticmethod
-    def getUnweightedPath(start_node, end_node, nodes = list(), connections = list()):
+    def getPath(start_node, end_node, nodes = list(), connections = list(), weight_key = "", default_weight = 1):
         # returns tuple of path from start to end in given subgraph as (nodes, connections, path length)
         # returns None if no path exists
+
+        # will pull data from supergraph. If no keys exist default weight is given
+        assert default_weight > 0, ValueError
 
         from PriorityQueue import PriorityQueue
 
@@ -841,10 +844,15 @@ class PathFinder:
             startpoint = queue_item[0]
             current_conn = queue_item[1]
             endpoint = queue_item[2]
+            # pull weight from connection; use default weight if not acceptable
+            weight = Supergraph.connectionlist[current_conn].getConnectionData(weight_key)
+            if weight == None or weight < default_weight:
+                weight = default_weight
+
 
             # visit unvisited nodes, or revisit ones under a new route
-            if endpoint not in node_to_dist.keys() or (node_to_dist[endpoint] > node_to_dist[startpoint] + 1):
-                node_to_dist[endpoint] = node_to_dist[startpoint] + 1
+            if endpoint not in node_to_dist.keys() or (node_to_dist[endpoint] > node_to_dist[startpoint] + weight):
+                node_to_dist[endpoint] = node_to_dist[startpoint] + weight
                 node_to_parent[endpoint] = (startpoint, current_conn)
 
                 # end goal found.
@@ -865,7 +873,7 @@ class PathFinder:
                 for conn in node_to_connections[endpoint]:
                     new_endpoint = Supergraph.connectionlist[conn].getEndPoint(endpoint)
                     if new_endpoint is not None:
-                        conn_queue.insert(node=(endpoint, conn, new_endpoint), priority=node_to_dist[endpoint]+1)
+                        conn_queue.insert(node=(endpoint, conn, new_endpoint), priority=node_to_dist[endpoint]+weight)
 
         return None # all connections traversed; no path found
 
@@ -1967,14 +1975,13 @@ Configurations.setRuntimeConfigs()
 # Supergraph.removeConnections(Supergraph.getAllConnectionKeys())
 #
 # # testing in and out degrees more
-# nodelist1 = ["N1","N2","N3","N4"]
-# nodelist2 = ["N6","N7","N8","N9"]
-# Supergraph.addNodes(nodelist1)
-# Supergraph.addNodes(nodelist2)
-# Supergraph.addNode("N5")
-# Supergraph.addConnections(nodelist1,["N5"],"both")
-# Supergraph.addConnections(["N5"],nodelist2,"both")
-# Supergraph.addConnections(["N5"],nodelist2,"both")
+nodelist1 = ["N1","N2","N3","N4"]
+nodelist2 = ["N6","N7","N8","N9"]
+Supergraph.addNodes(nodelist1)
+Supergraph.addNodes(nodelist2)
+Supergraph.addNode("N5")
+Supergraph.addConnections(nodelist1,["N5"],"both")
+Supergraph.addConnections(["N5"],nodelist2,"both")
 # print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(), degree = "in"))
 # print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(), degree = "out"))
 #
@@ -1991,7 +1998,7 @@ Configurations.setRuntimeConfigs()
 #ArtPointsFinder.getArtPoints(Supergraph.getAllNodeKeys(),Supergraph.connectionlist)
 
 # testing pathfinding
-# print("resulting path: ",PathFinder.getUnweightedPath(start_node="N1",end_node="N9",nodes=Supergraph.getAllNodeKeys(),connections=Supergraph.connectionlist.keys()))
+print("resulting path: ",PathFinder.getPath(start_node="N1",end_node="N9",nodes=Supergraph.getAllNodeKeys(),connections=Supergraph.connectionlist.keys()))
 
 
 # # testing eigenvector centrality
@@ -2032,7 +2039,7 @@ Supergraph.addConnections([nodelist1[len(nodelist1)-1]],[nodelist1[0]],"right")
 
 from time import time, sleep
 start_time = time()
-PathFinder.getUnweightedAllPairs(nodes=Supergraph.getAllNodeKeys(),connections=Supergraph.connectionlist.keys())
+# PathFinder.getUnweightedAllPairs(nodes=Supergraph.getAllNodeKeys(),connections=Supergraph.connectionlist.keys())
 end_time = time() - start_time
 print(end_time)
 

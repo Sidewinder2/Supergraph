@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="BookmarkManager">
-    <bookmark url="file://$PROJECT_DIR$/Supergraph.py" line="1407" />
+    <bookmark url="file://$PROJECT_DIR$/Supergraph.py" line="1415" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="dd69c87b-8c75-4510-aee9-6d4d32832042" name="Default" comment="" />
@@ -18,22 +18,14 @@
       <file leaf-file-name="Supergraph.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Supergraph.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-21887">
-              <caret line="708" column="54" lean-forward="true" selection-start-line="708" selection-start-column="54" selection-end-line="708" selection-end-column="54" />
+            <state relative-caret-position="716">
+              <caret line="2048" column="23" lean-forward="true" selection-start-line="2048" selection-start-column="23" selection-end-line="2048" selection-end-column="23" />
               <folding>
                 <element signature="e#26#1162#0" expanded="false" />
                 <element signature="e#1188#2134#0" expanded="false" />
+                <element signature="e#27119#31738#0" expanded="false" />
+                <element signature="e#31840#34504#0" expanded="false" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="PriorityQueue.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/PriorityQueue.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="272">
-              <caret line="16" column="29" lean-forward="false" selection-start-line="16" selection-start-column="29" selection-end-line="16" selection-end-column="29" />
-              <folding />
             </state>
           </provider>
         </entry>
@@ -49,7 +41,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>Arti</find>
       <find>SIZE</find>
       <find>GETNODES</find>
       <find>QUERY</find>
@@ -79,6 +70,7 @@
       <find>routes</find>
       <find>not don</find>
       <find>unwei</find>
+      <find>Path</find>
     </findStrings>
     <replaceStrings>
       <replace>#</replace>
@@ -126,9 +118,9 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="462" />
-    <option name="y" value="47" />
-    <option name="width" value="1384" />
+    <option name="x" value="778" />
+    <option name="y" value="23" />
+    <option name="width" value="1182" />
     <option name="height" value="1018" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
@@ -168,7 +160,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -195,9 +186,24 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Supergraph-2" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Supergraph-2" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="docs" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
         </subPane>
       </pane>
       <pane id="Scope" />
+      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -205,6 +211,11 @@
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
     <property name="SearchEverywhereHistoryKey" value="&#9;FILE&#9;file://D:/Code/Python/Supergraph-2/PriorityQueue.py" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\Code\Python\Supergraph-2" />
+    </key>
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -319,9 +330,10 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="462" y="47" width="1384" height="1018" extended-state="0" />
+    <frame x="778" y="23" width="1182" height="1018" extended-state="0" />
+    <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1450151" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.17379679" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32996634" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1442953" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -362,6 +374,9 @@
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
     </layout-to-restore>
   </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName="*.md" />
+  </component>
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
   </component>
@@ -382,6 +397,8 @@
           <folding>
             <element signature="e#26#1162#0" expanded="false" />
             <element signature="e#1188#2134#0" expanded="false" />
+            <element signature="e#27119#31738#0" expanded="false" />
+            <element signature="e#31840#34504#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -393,6 +410,8 @@
           <folding>
             <element signature="e#26#1162#0" expanded="false" />
             <element signature="e#1188#2134#0" expanded="false" />
+            <element signature="e#27119#31738#0" expanded="false" />
+            <element signature="e#31840#34504#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -404,6 +423,8 @@
           <folding>
             <element signature="e#26#1162#0" expanded="false" />
             <element signature="e#1188#2134#0" expanded="false" />
+            <element signature="e#27119#31738#0" expanded="false" />
+            <element signature="e#31840#34504#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -415,6 +436,8 @@
           <folding>
             <element signature="e#26#1162#0" expanded="false" />
             <element signature="e#1188#2134#0" expanded="false" />
+            <element signature="e#27119#31738#0" expanded="false" />
+            <element signature="e#31840#34504#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -426,6 +449,8 @@
           <folding>
             <element signature="e#26#1162#0" expanded="false" />
             <element signature="e#1188#2134#0" expanded="false" />
+            <element signature="e#27119#31738#0" expanded="false" />
+            <element signature="e#31840#34504#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -437,6 +462,8 @@
           <folding>
             <element signature="e#26#1162#0" expanded="false" />
             <element signature="e#1188#2134#0" expanded="false" />
+            <element signature="e#27119#31738#0" expanded="false" />
+            <element signature="e#31840#34504#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -448,6 +475,8 @@
           <folding>
             <element signature="e#26#1162#0" expanded="false" />
             <element signature="e#1188#2134#0" expanded="false" />
+            <element signature="e#27119#31738#0" expanded="false" />
+            <element signature="e#31840#34504#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -459,6 +488,8 @@
           <folding>
             <element signature="e#26#1162#0" expanded="false" />
             <element signature="e#1188#2134#0" expanded="false" />
+            <element signature="e#27119#31738#0" expanded="false" />
+            <element signature="e#31840#34504#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -470,6 +501,8 @@
           <folding>
             <element signature="e#26#1162#0" expanded="false" />
             <element signature="e#1188#2134#0" expanded="false" />
+            <element signature="e#27119#31738#0" expanded="false" />
+            <element signature="e#31840#34504#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -481,6 +514,8 @@
           <folding>
             <element signature="e#26#1162#0" expanded="false" />
             <element signature="e#1188#2134#0" expanded="false" />
+            <element signature="e#27119#31738#0" expanded="false" />
+            <element signature="e#31840#34504#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -492,6 +527,8 @@
           <folding>
             <element signature="e#26#1162#0" expanded="false" />
             <element signature="e#1188#2134#0" expanded="false" />
+            <element signature="e#27119#31738#0" expanded="false" />
+            <element signature="e#31840#34504#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -503,6 +540,8 @@
           <folding>
             <element signature="e#26#1162#0" expanded="false" />
             <element signature="e#1188#2134#0" expanded="false" />
+            <element signature="e#27119#31738#0" expanded="false" />
+            <element signature="e#31840#34504#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -514,6 +553,8 @@
           <folding>
             <element signature="e#26#1162#0" expanded="false" />
             <element signature="e#1188#2134#0" expanded="false" />
+            <element signature="e#27119#31738#0" expanded="false" />
+            <element signature="e#31840#34504#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -525,6 +566,8 @@
           <folding>
             <element signature="e#26#1162#0" expanded="false" />
             <element signature="e#1188#2134#0" expanded="false" />
+            <element signature="e#27119#31738#0" expanded="false" />
+            <element signature="e#31840#34504#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -536,6 +579,8 @@
           <folding>
             <element signature="e#26#1162#0" expanded="false" />
             <element signature="e#1188#2134#0" expanded="false" />
+            <element signature="e#27119#31738#0" expanded="false" />
+            <element signature="e#31840#34504#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -547,17 +592,8 @@
           <folding>
             <element signature="e#26#1162#0" expanded="false" />
             <element signature="e#1188#2134#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Supergraph.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#26#1162#0" expanded="false" />
-            <element signature="e#1188#2134#0" expanded="false" />
+            <element signature="e#27119#31738#0" expanded="false" />
+            <element signature="e#31840#34504#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -570,6 +606,8 @@
           <folding>
             <element signature="e#26#1162#0" expanded="false" />
             <element signature="e#1188#2134#0" expanded="false" />
+            <element signature="e#27119#31738#0" expanded="false" />
+            <element signature="e#31840#34504#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -621,13 +659,6 @@
     <entry file="file://$PROJECT_DIR$/config.txt" />
     <entry file="file://$PROJECT_DIR$/graphdata.txt" />
     <entry file="file://$PROJECT_DIR$/testfile2.json" />
-    <entry file="file://$PROJECT_DIR$/README.md">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/keywords.txt">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="255">
@@ -696,13 +727,31 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/docs/Introduction.md">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/Supergraph.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-21887">
-          <caret line="708" column="54" lean-forward="true" selection-start-line="708" selection-start-column="54" selection-end-line="708" selection-end-column="54" />
+        <state relative-caret-position="716">
+          <caret line="2048" column="23" lean-forward="true" selection-start-line="2048" selection-start-column="23" selection-end-line="2048" selection-end-column="23" />
           <folding>
             <element signature="e#26#1162#0" expanded="false" />
             <element signature="e#1188#2134#0" expanded="false" />
+            <element signature="e#27119#31738#0" expanded="false" />
+            <element signature="e#31840#34504#0" expanded="false" />
           </folding>
         </state>
       </provider>
