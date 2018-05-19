@@ -191,23 +191,23 @@ class Supergraph:
             return nodename
         else:
             if add_if_exists or Configurations.config_values["node_add_if_exists"]:
-                new_node = KeyGenerator.getNextName(nodename)
-                Supergraph.nodelist[nodename] = Node(new_node)
+                new_node = KeyGenerator.getNextName(nodename, Supergraph.getAllNodeKeys())
+                Supergraph.nodelist[new_node] = Node(new_node)
                 Supergraph.nodeconnectionlist[new_node] = set()
                 Supergraph.keylist.append(new_node)
                 return new_node
-        return nodename
-
-
-
+        return nodename # already exists in graph if everything fails
 
     @staticmethod
-    def addNodes(nodenames = [], nodedata={}):
+    def addNodes(nodenames = {}, nodedata={}, add_if_exists = False):
         assert type(nodenames) in [list,set]
         assert type(nodedata) is dict
 
+        returned_nodes = set()
         for nodename in nodenames:
-            Supergraph.addNode(nodename,nodedata)
+            returned_nodes.add(Supergraph.addNode(nodename,nodedata, add_if_exists))
+
+        return returned_nodes
 
     @staticmethod
     def removeNodes( nodenames):
@@ -320,7 +320,7 @@ class Supergraph:
         else:
             if add_if_exists or Configurations.config_values["connection_add_if_exists"]:
                 new_conn = KeyGenerator.getNextName(connectionname)
-                Supergraph.connectionlist[new_conn] = Connection(new_conn)
+                Supergraph.connectionlist[new_conn] = Connection(new_conn, leftname,  rightname, direction)
                 Supergraph.nodeconnectionlist[leftname].add(new_conn)
                 Supergraph.nodeconnectionlist[rightname].add(new_conn)
                 Supergraph.keylist.append(connectionname)
@@ -329,17 +329,22 @@ class Supergraph:
 
 
     @staticmethod
-    def addConnections( leftnames,  rightnames, direction = 'both', generator = "Connection"):
+    def addConnections( leftnames,  rightnames, direction = 'both', generator = "Connection", prevent_recursive = False):
         # Adds connections to the database
         # Will connect every node from left side to right side,  resulting in L * R connections
         assert direction in ["both","right"]
+
+        return_connections = set()
 
         verifiedleftnames = Supergraph.verifyNodeNames(leftnames)
         verifiedrightnames = Supergraph.verifyNodeNames(rightnames)
         for left in verifiedleftnames:
             for right in verifiedrightnames:
-                connectionname = KeyGenerator.getNextName(generator, Supergraph.getAllConnectionKeys())
-                Supergraph.addConnection(connectionname, left, right, direction)
+                if left != right or not prevent_recursive:
+                    connectionname = KeyGenerator.getNextName(generator, Supergraph.getAllConnectionKeys())
+                    return_connections.add(Supergraph.addConnection(connectionname, left, right, direction))
+
+        return return_connections
 
     @staticmethod
     def removeConnections(connectionnames):
@@ -1967,6 +1972,49 @@ class FileHandler:
         #TODO Implement reading file
         return
 
+class GraphGenerator:
+    def generateCompleteGraph(node_basename,connection_basename, node_count, prevent_recursive = True):
+        assert type(node_count) is int, ValueError
+        assert node_count >= 1, ValueError
+
+        nodes = Supergraph.addNodes(nodenames = ([node_basename] * node_count),nodedata=dict,add_if_exists=True)
+        connections = Supergraph.addConnections(leftnames=nodes,rightnames=nodes,direction="both",generator=connection_basename,prevent_recursive=prevent_recursive)
+        return (nodes,connections)
+
+    def generateRingGraph(node_basename, connection_basename, ring_size, direction):
+        # generates a ring graph, wrapping generateLineGraph
+        return GraphGenerator.generateLineGraph(node_basename, connection_basename, ring_size, direction, True)
+
+    def generateLineGraph(node_basename, connection_basename, line_size, direction, loop_to_start = False):
+        # generates a line graph using the given names for key generators
+        # size and direction(bidirectional or unidirectional) as specified
+        # will loop back forming a ring if desired
+        # returns a tuple containing the keys of each
+
+        assert type(line_size) is int, ValueError
+        assert line_size >= 1, ValueError
+        assert direction in ["right", "both"], ValueError
+
+        returned_nodes = set()
+        returned_connections = set()
+        first_node = Supergraph.addNode(node_basename, add_if_exists=True)
+        last_node = first_node
+        left_node = first_node
+        returned_nodes.add(left_node)
+        for i in range(line_size - 1):
+            right_node = Supergraph.addNode(node_basename, add_if_exists=True)
+            returned_nodes.add(right_node)
+            last_node = right_node
+            conn = Supergraph.addConnection(connection_basename, left_node, right_node, direction)
+            left_node = right_node
+            returned_connections.add(conn)
+
+        # loop back to first node if told to
+        if loop_to_start:
+            conn = Supergraph.addConnection(connection_basename, last_node, first_node, direction)
+            returned_connections.add(conn)
+
+        return (returned_nodes, returned_connections)
 
 import time # used for getting unix time
 import queue    # used for priority queues
@@ -2058,8 +2106,14 @@ for node in range(len(nodelist1)-1):
 Supergraph.addConnections([nodelist1[len(nodelist1)-1]],[nodelist1[0]],"right")
 
 # PathFinder.getUnweightedAllPairs(nodes=Supergraph.getAllNodeKeys(),connections=Supergraph.connectionlist.keys())
+
+# testing generators
+line_graph = GraphGenerator.generateRingGraph(node_basename="node",connection_basename="connection",ring_size=20,direction="both")
+print("resulting nodes",line_graph[0])
+print("resulting connections",line_graph[1])
+
 end_time = time() - start_time
-print(end_time)
+print("time of execution",end_time)
 
 #                      __
 #         _______     /*_)-< HISS HISS
