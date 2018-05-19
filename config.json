@@ -1,3 +1,5 @@
 {
-    "runtimescript": "script.txt"
+    "connection_add_if_exists": true,
+    "node_add_if_exists": true,
+    "runtime_script": "script.txt"
 }

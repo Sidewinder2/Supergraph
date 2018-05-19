@@ -1,6 +1,6 @@
 class Configurations:
     config_values = {}  # dictionary containing all configs
-    DEFAULT_CONFIG_FNAME = "config.json" # default congig filename
+    DEFAULT_CONFIG_FNAME = "config.json" # default config filename
 
     @staticmethod
     def setRuntimeConfigs(filename = DEFAULT_CONFIG_FNAME):
@@ -9,7 +9,9 @@ class Configurations:
         # and populate with default configs
         # If it exists, read from it
 
-        Configurations.config_values["runtimescript"] = "script.txt"
+        Configurations.config_values["runtime_script"] = "script.txt"
+        Configurations.config_values["node_add_if_exists"] = True
+        Configurations.config_values["connection_add_if_exists"] = True
         Configurations.loadConfigFile(filename)
         Configurations.writeConfigFile(filename)
 
@@ -177,7 +179,7 @@ class Supergraph:
         return returnlist
 
     @staticmethod
-    def addNode(nodename, nodedata = {}):
+    def addNode(nodename, nodedata = {}, add_if_exists = False):
         assert type(nodename) is str
         assert type(nodedata) is dict
 
@@ -186,13 +188,22 @@ class Supergraph:
             Supergraph.nodelist[nodename] = Node(nodename)
             Supergraph.nodeconnectionlist[nodename] = set()
             Supergraph.keylist.append(nodename)
-            return True
+            return nodename
         else:
-            return False
+            if add_if_exists or Configurations.config_values["node_add_if_exists"]:
+                new_node = KeyGenerator.getNextName(nodename)
+                Supergraph.nodelist[nodename] = Node(new_node)
+                Supergraph.nodeconnectionlist[new_node] = set()
+                Supergraph.keylist.append(new_node)
+                return new_node
+        return nodename
+
+
+
 
     @staticmethod
     def addNodes(nodenames = [], nodedata={}):
-        assert type(nodenames) is list
+        assert type(nodenames) in [list,set]
         assert type(nodedata) is dict
 
         for nodename in nodenames:
@@ -287,7 +298,7 @@ class Supergraph:
             Node.removeNodeData(nodes[node],  varname)
 
     @staticmethod
-    def addConnection( connectionname,  leftname,  rightname, direction = "both"):
+    def addConnection( connectionname,  leftname,  rightname, direction = "both", add_if_exists = False):
         # creates a connection in the database. Returns true if successful, false if not
 
         assert type(connectionname) is str
@@ -300,13 +311,22 @@ class Supergraph:
         if rightname not in Supergraph.nodelist.keys():
             return False
 
-        if connectionname not in Supergraph.connectionlist:
+        if connectionname not in Supergraph.connectionlist and connectionname not in Supergraph.keylist:
             Supergraph.connectionlist[connectionname] = Connection(connectionname, leftname,  rightname, direction)
             Supergraph.nodeconnectionlist[leftname].add(connectionname)
             Supergraph.nodeconnectionlist[rightname].add(connectionname)
             Supergraph.keylist.append(connectionname)
-            return True
-        return False
+            return connectionname
+        else:
+            if add_if_exists or Configurations.config_values["connection_add_if_exists"]:
+                new_conn = KeyGenerator.getNextName(connectionname)
+                Supergraph.connectionlist[new_conn] = Connection(new_conn)
+                Supergraph.nodeconnectionlist[leftname].add(new_conn)
+                Supergraph.nodeconnectionlist[rightname].add(new_conn)
+                Supergraph.keylist.append(connectionname)
+                return new_conn
+        return connectionname
+
 
     @staticmethod
     def addConnections( leftnames,  rightnames, direction = 'both', generator = "Connection"):
@@ -845,10 +865,9 @@ class PathFinder:
             current_conn = queue_item[1]
             endpoint = queue_item[2]
             # pull weight from connection; use default weight if not acceptable
-            weight = Supergraph.connectionlist[current_conn].getConnectionData(weight_key)
-            if weight == None or weight < default_weight:
+            weight = Connection.getConnectionData(Supergraph.connectionlist[current_conn],weight_key)
+            if (weight == None) or (weight < default_weight):
                 weight = default_weight
-
 
             # visit unvisited nodes, or revisit ones under a new route
             if endpoint not in node_to_dist.keys() or (node_to_dist[endpoint] > node_to_dist[startpoint] + weight):
@@ -1956,9 +1975,12 @@ import random   # used for random functions
 import json
 import GraphRenderer
 
+from time import time, sleep
+start_time = time()
+
 Configurations.setRuntimeConfigs()
 
-# file = open(Configurations.config_values["runtimescript"], 'r')
+# file = open(Configurations.config_values["runtime_script"], 'r')
 # x = file.readlines()
 # for i in x:
 #     Interpreter.evaluateExpression(i.rstrip())
@@ -1982,6 +2004,8 @@ Supergraph.addNodes(nodelist2)
 Supergraph.addNode("N5")
 Supergraph.addConnections(nodelist1,["N5"],"both")
 Supergraph.addConnections(["N5"],nodelist2,"both")
+Supergraph.addConnectionData(Supergraph.getAllConnectionKeys(),"testing",5)
+
 # print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(), degree = "in"))
 # print("degrees",Supergraph.getNodeDegrees(nodenames = Supergraph.getAllNodeKeys(), degree = "out"))
 #
@@ -1998,8 +2022,7 @@ Supergraph.addConnections(["N5"],nodelist2,"both")
 #ArtPointsFinder.getArtPoints(Supergraph.getAllNodeKeys(),Supergraph.connectionlist)
 
 # testing pathfinding
-print("resulting path: ",PathFinder.getPath(start_node="N1",end_node="N9",nodes=Supergraph.getAllNodeKeys(),connections=Supergraph.connectionlist.keys()))
-
+print("resulting path: ",PathFinder.getPath(start_node="N1",end_node="N9",nodes=Supergraph.getAllNodeKeys(),connections=Supergraph.connectionlist.keys(),weight_key="testing"))
 
 # # testing eigenvector centrality
 # Supergraph.removeNodes(Supergraph.getAllNodeKeys())
@@ -2013,10 +2036,6 @@ print("resulting path: ",PathFinder.getPath(start_node="N1",end_node="N9",nodes=
 # Supergraph.addConnections(["N4"],["N5"],"right")
 # print(GraphCentrality.getEigenVectorCentrality(nodes=Supergraph.getAllNodeKeys(),connections=Supergraph.connectionlist.keys()))
 
-
-
-
-
 # testing pathfinding
 Supergraph.removeNodes(Supergraph.getAllNodeKeys())
 Supergraph.removeConnections(Supergraph.getAllConnectionKeys())
@@ -2027,6 +2046,7 @@ for i in range(0,2000):
     nodelist1.append("N"+str(i))
 
 Supergraph.addNodes(nodelist1)
+
 # for node in range(int(len(nodelist1)/2) -1):
 #     Supergraph.addConnections([nodelist1[node]],[nodelist1[node+1]],"right")
 
@@ -2037,8 +2057,6 @@ for node in range(len(nodelist1)-1):
     Supergraph.addConnections([nodelist1[node]],[nodelist1[node+1]],"right")
 Supergraph.addConnections([nodelist1[len(nodelist1)-1]],[nodelist1[0]],"right")
 
-from time import time, sleep
-start_time = time()
 # PathFinder.getUnweightedAllPairs(nodes=Supergraph.getAllNodeKeys(),connections=Supergraph.connectionlist.keys())
 end_time = time() - start_time
 print(end_time)
